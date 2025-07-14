@@ -1,0 +1,342 @@
+"use client"
+
+import { useState } from "react"
+import { Link } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { apiService } from "../../services/apiService"
+import { Plus, Search, Filter, Calendar, Users, Eye, Edit, Trash2, MoreVertical, ChevronDown } from "lucide-react"
+
+const OrganizerEvents = () => {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [sortBy, setSortBy] = useState("created_at")
+  const [sortOrder, setSortOrder] = useState("desc")
+  const [showFilters, setShowFilters] = useState(false)
+
+  const {
+    data: events,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["organizer-events", searchTerm, statusFilter, sortBy, sortOrder],
+    queryFn: () =>
+      apiService.getOrganizerEvents({
+        search: searchTerm,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
+      }),
+  })
+
+  const EventCard = ({ event }) => {
+    const [showMenu, setShowMenu] = useState(false)
+
+    const getStatusColor = (status) => {
+      switch (status) {
+        case "published":
+          return "bg-green-100 text-green-800"
+        case "draft":
+          return "bg-yellow-100 text-yellow-800"
+        case "cancelled":
+          return "bg-red-100 text-red-800"
+        default:
+          return "bg-gray-100 text-gray-800"
+      }
+    }
+
+    const attendanceRate = event.capacity > 0 ? (event.booked_count / event.capacity) * 100 : 0
+
+    return (
+      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div className="relative">
+          <img
+            src={event.featured_image || "/placeholder.svg?height=200&width=400"}
+            alt={event.title}
+            className="w-full h-48 object-cover rounded-t-lg"
+          />
+          <div className="absolute top-4 left-4">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
+              {event.status}
+            </span>
+          </div>
+          <div className="absolute top-4 right-4">
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="bg-white bg-opacity-90 p-2 rounded-full hover:bg-opacity-100"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                  <Link
+                    to={`/organizer/events/${event.id}`}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Details
+                  </Link>
+                  <Link
+                    to={`/organizer/events/${event.id}/edit`}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Event
+                  </Link>
+                  <button className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Event
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-center text-sm text-gray-500 mb-2">
+            <Calendar className="h-4 w-4 mr-1" />
+            <span>{new Date(event.start_date).toLocaleDateString()}</span>
+            <span className="mx-2">•</span>
+            <span>{event.category.name}</span>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
+
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center text-sm text-gray-500">
+              <Users className="h-4 w-4 mr-1" />
+              <span>
+                {event.booked_count}/{event.capacity} attendees
+              </span>
+            </div>
+            <div className="text-sm font-medium text-gray-900">{event.price > 0 ? `$${event.price}` : "Free"}</div>
+          </div>
+
+          {/* Attendance Progress Bar */}
+          <div className="mb-4">
+            <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <span>Attendance</span>
+              <span>{attendanceRate.toFixed(0)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full ${
+                  attendanceRate >= 80 ? "bg-green-500" : attendanceRate >= 50 ? "bg-yellow-500" : "bg-red-500"
+                }`}
+                style={{ width: `${Math.min(attendanceRate, 100)}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <Link
+              to={`/organizer/events/${event.id}`}
+              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+            >
+              View Details →
+            </Link>
+            <Link
+              to={`/organizer/events/${event.id}/edit`}
+              className="bg-primary-600 text-white px-3 py-1 rounded text-sm hover:bg-primary-700"
+            >
+              Edit
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">My Events</h1>
+              <p className="text-gray-600">Manage your events and track their performance</p>
+            </div>
+            <Link
+              to="/organizer/events/create"
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Event
+            </Link>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            </div>
+
+            {/* Sort */}
+            <div className="relative">
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [field, order] = e.target.value.split("-")
+                  setSortBy(field)
+                  setSortOrder(order)
+                }}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="created_at-desc">Newest First</option>
+                <option value="created_at-asc">Oldest First</option>
+                <option value="start_date-asc">Event Date (Earliest)</option>
+                <option value="start_date-desc">Event Date (Latest)</option>
+                <option value="title-asc">Title (A-Z)</option>
+                <option value="title-desc">Title (Z-A)</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            </div>
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </button>
+          </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    <input
+                      type="date"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                    <option value="">All Categories</option>
+                    <option value="1">Web Development</option>
+                    <option value="2">Mobile Development</option>
+                    <option value="3">AI/ML</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                    <option value="">All Prices</option>
+                    <option value="free">Free</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Events Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-sm animate-pulse">
+                <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                <div className="p-6">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : events?.data?.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.data.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || statusFilter !== "all"
+                ? "Try adjusting your search or filters"
+                : "Create your first event to get started!"}
+            </p>
+            <Link
+              to="/organizer/events/create"
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Event
+            </Link>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {events?.meta?.last_page > 1 && (
+          <div className="mt-8 flex justify-center">
+            <nav className="flex items-center space-x-2">
+              <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                Previous
+              </button>
+              {[...Array(events.meta.last_page)].map((_, i) => (
+                <button
+                  key={i}
+                  className={`px-3 py-2 border rounded-lg ${
+                    i + 1 === events.meta.current_page
+                      ? "bg-primary-600 text-white border-primary-600"
+                      : "border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                Next
+              </button>
+            </nav>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default OrganizerEvents

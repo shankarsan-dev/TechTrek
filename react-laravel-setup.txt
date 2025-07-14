@@ -1,0 +1,51 @@
+Laravel + React Setup Steps
+=========================
+
+1. Initial Setup
+---------------
+- Create new Laravel project
+- Install required npm packages for React and Vite
+
+2. Configure Build Tools
+-----------------------
+- Set up vite.config.js for React support
+- Configure Tailwind CSS
+
+3. File Structure Setup
+----------------------
+a) Create React entry files:
+   - resources/js/main.jsx (Entry point)
+   - resources/js/app.jsx (Main App component)
+
+b) Update CSS:
+   - resources/css/app.css (Tailwind directives)
+
+4. React Integration
+-------------------
+a) main.jsx setup:
+   ```
+   import { StrictMode } from 'react'
+   import { createRoot } from 'react-dom/client'
+   import App from './app.jsx'
+
+   createRoot(document.getElementById('root')).render(
+     <StrictMode>
+       <App />
+     </StrictMode>,
+   )
+   ```
+
+5. Laravel View Integration
+--------------------------
+- Create resources/views/app.blade.php
+- Add root div element for React mounting
+- Include Vite assets
+
+6. Build & Run
+--------------
+- Run npm install
+- Run npm run dev for development
+- Run npm run build for production
+
+Note: Ensure case sensitivity in imports matches actual filenames
+(e.g., './app.jsx' not './App.jsx') 
