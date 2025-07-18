@@ -383,4 +383,39 @@ export const apiService = {
     const response = await api.delete(`/user/favorites/${eventId}`);
     return response.data;
   },
+
+  createEvent: async (formData) => {
+  try {
+    const response = await api.post("/events", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+},
+  updateEvent: async (id, formData) => {
+    try {
+      const response = await api.put(`/events/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deleteEvent: async (id) => {
+    try {
+      const response = await api.delete(`/events/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
+
