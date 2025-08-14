@@ -242,11 +242,11 @@ const OrganizerLayout = () => {
           <div className="flex flex-col flex-grow pt-5 bg-white overflow-y-auto border-r border-gray-200">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0 px-4">
-              <Link to="/" className="flex items-center space-x-2">
+              <Link to="/organizer/dashboard" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <LayoutDashboard className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-gray-900">TechEvents</span>
+                <span className="text-xl font-bold text-gray-900">TechTrek</span>
               </Link>
             </div>
 

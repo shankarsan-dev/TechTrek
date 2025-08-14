@@ -1,13 +1,10 @@
 <?php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'title',
         'description',
@@ -19,36 +16,29 @@ class Event extends Model
         'venue_name',
         'location',
         'address',
-        'capacity',
-        'price',
         'is_free',
         'featured_image',
         'status',
-        'tags',
-        'created_by',
+        'organizer_id'
     ];
 
-    protected $casts = [
-        'tags' => 'array',
-        'is_free' => 'boolean',
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
-    ];
-
-    public function organizer()
+    public function tickets()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->hasMany(Ticket::class);
     }
 
-    public function category()
+    public function agendas()
     {
-        return $this->belongsTo(Category::class);
+        return $this->hasMany(EventAgenda::class);
     }
 
-    public function bookings()
+    public function speakers()
     {
-        return $this->hasMany(Booking::class);
+        return $this->hasMany(Speaker::class);
+    }
+
+    public function tags()
+    {
+        return $this->hasMany(EventTag::class);
     }
 }

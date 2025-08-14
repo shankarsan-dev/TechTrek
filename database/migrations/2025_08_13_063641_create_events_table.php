@@ -1,4 +1,6 @@
 <?php
+
+// database/migrations/xxxx_xx_xx_create_events_table.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -9,32 +11,24 @@ return new class extends Migration {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('description')->nullable();
-
-            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
-
+            $table->text('description');
+            $table->unsignedBigInteger('category_id');
             $table->date('start_date');
             $table->date('end_date');
             $table->time('start_time');
             $table->time('end_time');
-
             $table->string('venue_name');
-            $table->string('location'); // City
-            $table->string('address')->nullable();
-
-            $table->unsignedInteger('capacity');
-            $table->decimal('price', 10, 2)->nullable();
+            $table->string('location');
+            $table->text('address');
             $table->boolean('is_free')->default(false);
-
-            $table->string('featured_image')->nullable(); // Path to image file
-
+            $table->string('featured_image')->nullable();
             $table->enum('status', ['draft', 'published'])->default('draft');
-
-            $table->json('tags')->nullable();
-
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
-
+            $table->unsignedBigInteger('organizer_id');
             $table->timestamps();
+
+            // Optional foreign keys
+            // $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            // $table->foreign('organizer_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

@@ -206,7 +206,7 @@
 
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://192.168.10.71:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -299,7 +299,7 @@ export const apiService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to get user");
     }
-  },
+  },  
 
   // Password reset flow
   forgotPassword: async (email) => {
@@ -337,9 +337,11 @@ export const apiService = {
   },
 
   getCategories: async () => {
-    const response = await api.get("/categories");
-    return response.data;
-  },
+        const response = await api.get("/categories");
+        // alert(response.data);
+        return response.data;
+        
+      },
 
   // Bookings
   createBooking: async (eventId, quantity) => {

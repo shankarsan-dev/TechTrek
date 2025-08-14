@@ -11,11 +11,9 @@ import Categories from "./pages/Categories"
 import EventDetails from "./pages/EventDetails"
 import Events from "./pages/Events"
 import EventsNearYou from "./pages/EventsNearYou"
-import Home from "./pages/Home"
 import Profile from "./pages/Profile"
 import RecommendedEvents from "./pages/RecommendedEvents"
-
-// Organizer Pages - No authentication required for now
+// Organizer Pages
 import OrganizerLayout from "./components/Layout/OrganizerLayout"
 import OrganizerAnalytics from "./pages/Organizer/Analytics"
 import OrganizerAttendees from "./pages/Organizer/Attendees"
@@ -35,7 +33,11 @@ import UserLayout from "./components/Layout/UserLayout"
 import UserDashboard from "./pages/User/Dashboard"
 import UserFavorites from "./pages/User/Favorites"
 
+import ProtectedRoute from "./components/Auth/ProtectedRoute"
+
 import "../css/app.css"
+import Home from "./pages/Home"
+import HomeRedirect from "./pages/HomeRedirect"
 
 const queryClient = new QueryClient()
 
@@ -54,7 +56,8 @@ function App() {
 
               {/* Public Routes */}
               <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
+                <Route index element={<HomeRedirect />} />
+                 <Route  path ="home" element={<Home />} />
                 <Route path="events" element={<Events />} />
                 <Route path="events-near-you" element={<EventsNearYou />} />
                 <Route path="recommended-events" element={<RecommendedEvents />} />
@@ -62,8 +65,15 @@ function App() {
                 <Route path="categories" element={<Categories />} />
               </Route>
 
-              {/* User Routes */}
-              <Route path="/user" element={<UserLayout />}>
+              {/* User Routes - Protected */}
+              <Route
+                path="/user"
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <UserLayout />
+                  </ProtectedRoute>
+                }
+              >
                 <Route index element={<UserDashboard />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="bookings" element={<Bookings />} />
@@ -71,8 +81,15 @@ function App() {
                 <Route path="settings" element={<div>User Settings Page</div>} />
               </Route>
 
-              {/* Organizer Routes - No authentication required for now */}
-              <Route path="/organizer" element={<OrganizerLayout />}>
+              {/* Organizer Routes - Protected */}
+              <Route
+                path="/organizer"
+                element={
+                  <ProtectedRoute requiredRole="organizer">
+                    <OrganizerLayout />
+                  </ProtectedRoute>
+                }
+              >
                 <Route index element={<Navigate to="/organizer/dashboard" replace />} />
                 <Route path="dashboard" element={<OrganizerDashboard />} />
                 <Route path="events" element={<OrganizerEvents />} />
@@ -83,8 +100,15 @@ function App() {
                 <Route path="settings" element={<OrganizerSettings />} />
               </Route>
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
+              {/* Admin Routes - Protected */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }
+              >
                 <Route index element={<AdminDashboard />} />
                 <Route path="organizer-verification" element={<OrganizerVerification />} />
                 <Route path="users" element={<div>User Management Page</div>} />
