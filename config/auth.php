@@ -13,10 +13,15 @@ return [
     |
     */
 
+    // 'defaults' => [
+    //     'guard' => env('AUTH_GUARD', 'web'),
+    //     'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+    // ],
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
-    ],
+    'guard' => 'api',   // makes auth() default to JWT guard
+    'passwords' => 'users',
+],
+
 
     /*
     |--------------------------------------------------------------------------

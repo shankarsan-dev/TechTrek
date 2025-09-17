@@ -2,17 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Category extends Model
 {
-    use HasFactory;
+    protected $connection = 'mongodb';
+    protected $collection = 'categories';
 
-    protected $fillable = ['name', 'description'];
+    // Use slug as primary key (_id)
+    protected $primaryKey = '_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    public function events()
-    {
-        return $this->hasMany(Event::class);
-    }
+    // Only fillable field is "name"
+    protected $fillable = [
+        '_id',   // slug like "ai-ml"
+        'name',  // display name like "AI & Machine Learning"
+    ];
+
+    // No timestamps (since you said only name)
+    public $timestamps = false;
 }

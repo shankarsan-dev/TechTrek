@@ -1,8 +1,13 @@
 <?php
-// use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
-// 'api' => [
-//     EnsureFrontendRequestsAreStateful::class,
-//     'throttle:api',
-//     \Illuminate\Routing\Middleware\SubstituteBindings::class,
-// ],
+namespace App\Http;
+
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
+
+class Kernel extends HttpKernel
+{
+    protected $routeMiddleware = [
+        'auth:api' => \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
+        'role' => \App\Http\Middleware\CheckRole::class,
+    ];
+}

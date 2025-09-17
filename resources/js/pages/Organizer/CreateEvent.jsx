@@ -12,7 +12,7 @@ const CreateEvent = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [ticketData, setTicketData] = useState([]);
+  const [ticketData, setTicketData] = useState([])
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -30,39 +30,22 @@ const CreateEvent = () => {
     featured_image: null,
     agenda: [],
     status: "draft",
-    tags: [], 
-    organizer_id: user?.id || null, // Automatically set organizer ID from context
-
+    tags: [],
+    organizer_id: user?.id || null,
   })
-const [agenda, setAgenda] = useState([]);
-const [currentAgendaItem, setCurrentAgendaItem] = useState({ time: "", description: "" });
-const handleAgendaChange = (e) => {
-  const { name, value } = e.target;
-  setCurrentAgendaItem((prev) => ({ ...prev, [name]: value }));
-};
-const addAgendaItem = () => {
-  if (currentAgendaItem.time.trim() && currentAgendaItem.description.trim()) {
-    setAgenda((prev) => [...prev, currentAgendaItem]);
-    setCurrentAgendaItem({ time: "", description: "" });
-  }
-};
-const removeAgendaItem = (index) => {
-  setAgenda((prev) => prev.filter((_, i) => i !== index));
-};
+  const [agenda, setAgenda] = useState([])
+  const [currentAgendaItem, setCurrentAgendaItem] = useState({ time: "", description: "" })
   const [imagePreview, setImagePreview] = useState(null)
   const [currentTag, setCurrentTag] = useState("")
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [speakers, setSpeakers] = useState([{ name: "", profession: "" }])
+  const [payloadLog, setPayloadLog] = useState("")
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: apiService.getCategories,
   })
-
-const [speakers, setSpeakers] = useState([
-  { name: "", profession: "" },
-]);
-
 
   const createEventMutation = useMutation({
     mutationFn: apiService.createEvent,
@@ -82,7 +65,6 @@ const [speakers, setSpeakers] = useState([
       [name]: type === "checkbox" ? checked : value,
     }))
 
-    // Clear specific error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }))
     }
@@ -91,8 +73,22 @@ const [speakers, setSpeakers] = useState([
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
+      // Validate file type and size
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      
+      if (!validTypes.includes(file.type)) {
+        setErrors({ featured_image: ["Please select a valid image format (JPEG, PNG, GIF, WEBP)"] })
+        return
+      }
+      
+      if (file.size > maxSize) {
+        setErrors({ featured_image: ["Image size must be less than 10MB"] })
+        return
+      }
+      
       setFormData((prev) => ({ ...prev, featured_image: file }))
-
+      
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result)
@@ -104,6 +100,22 @@ const [speakers, setSpeakers] = useState([
   const removeImage = () => {
     setFormData((prev) => ({ ...prev, featured_image: null }))
     setImagePreview(null)
+  }
+
+  const handleAgendaChange = (e) => {
+    const { name, value } = e.target
+    setCurrentAgendaItem((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const addAgendaItem = () => {
+    if (currentAgendaItem.time.trim() && currentAgendaItem.description.trim()) {
+      setAgenda((prev) => [...prev, currentAgendaItem])
+      setCurrentAgendaItem({ time: "", description: "" })
+    }
+  }
+
+  const removeAgendaItem = (index) => {
+    setAgenda((prev) => prev.filter((_, i) => i !== index))
   }
 
   const addTag = () => {
@@ -123,54 +135,89 @@ const [speakers, setSpeakers] = useState([
     }))
   }
 
+  const validateForm = () => {
+    const newErrors = {}
+    
+    if (!formData.title.trim()) newErrors.title = ["Title is required"]
+    if (!formData.description.trim()) newErrors.description = ["Description is required"]
+    if (!formData.category_id) newErrors.category_id = ["Category is required"]
+    if (!formData.start_date) newErrors.start_date = ["Start date is required"]
+    if (!formData.start_time) newErrors.start_time = ["Start time is required"]
+    if (!formData.end_date) newErrors.end_date = ["End date is required"]
+    if (!formData.end_time) newErrors.end_time = ["End time is required"]
+    if (!formData.venue_name) newErrors.venue_name = ["Venue name is required"]
+    if (!formData.location) newErrors.location = ["Location is required"]
+    if (!formData.featured_image) newErrors.featured_image = ["Featured image is required"]
+    
+    if (ticketData.length === 0 && !formData.is_free) {
+      newErrors.tickets = ["At least one ticket type is required for paid events"]
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 const handleSubmit = async (e) => {
-  if (e?.preventDefault) e.preventDefault()
+  if (e?.preventDefault) e.preventDefault();
 
-  setLoading(true)
-  setErrors({})
+  if (!validateForm()) return;
+
+  setLoading(true);
+  setErrors({});
 
   try {
-    const submitData = new FormData()
-  console.log("📝 Form Data:", formData)
-    console.log("🎟️ Ticket Data:", ticketData)
-    Object.keys(formData).forEach((key) => {
-      if (key === "tags") {
-        submitData.append(key, JSON.stringify(formData[key]))
-      } else if (key === "featured_image" && formData[key]) {
-        submitData.append(key, formData[key])
-      } else if (formData[key] !== null && formData[key] !== "") {
-        submitData.append(key, formData[key])
-      }
-    })
-    submitData.append("agenda", JSON.stringify(agenda));
-    submitData.append("speakers", JSON.stringify(speakers));
-    submitData.append("organizer_id", user?.id || null); // Ensure organizer ID is included
+    const submitData = new FormData();
 
+    // Required strings
+    submitData.append("title", formData.title);
+    submitData.append("description", formData.description);
+    submitData.append("category_id", formData.category_id);
+    submitData.append("start_date", formData.start_date);
+    submitData.append("end_date", formData.end_date);
+    submitData.append("start_time", formData.start_time);
+    submitData.append("end_time", formData.end_time);
+    submitData.append("venue_name", formData.venue_name || "");
+    submitData.append("location", formData.location || "");
+    submitData.append("address", formData.address || "");
+    submitData.append("status", formData.status || "draft");
 
+    // Numeric fields
+    submitData.append("organizer_id", formData.organizer_id || "");
+    submitData.append("capacity", formData.capacity || "");
+    submitData.append("price", formData.price || 0);
 
-    // 🔍 LOG THE DATA IN A READABLE FORMAT
-    for (let pair of submitData.entries()) {
-      console.log(`${pair[0]}:`, pair[1])
+    // Boolean for free events
+    submitData.append("is_free", formData.is_free ? 1 : 0);
+
+    // Featured image
+    if (formData.featured_image) {
+      submitData.append("featured_image", formData.featured_image);
     }
 
-    // 💡 Comment out the actual API call while testing
-     await createEventMutation.mutateAsync(submitData)
+    // Nested arrays as JSON strings
+    submitData.append("agenda", JSON.stringify(agenda || []));
+    submitData.append("speakers", JSON.stringify(speakers || []));
+    submitData.append("tags", JSON.stringify(formData.tags || []));
+    submitData.append("tickets", JSON.stringify(ticketData || []));
+
+    // Debug log
+    let logContent = "Form Data Payload:\n\n";
+    for (let pair of submitData.entries()) {
+      logContent += `${pair[0]}: ${typeof pair[1] === "object" ? JSON.stringify(pair[1]) : pair[1]}\n`;
+    }
+    setPayloadLog(logContent);
+    console.log(logContent);
+
+    // Call API
+    await createEventMutation.mutateAsync(submitData);
+
   } catch (error) {
-    console.error("Error preparing event data:", error)
+    console.error("Error submitting form:", error);
+    setErrors(error.response?.data?.errors || {});
   } finally {
-    setLoading(false)
+    setLoading(false);
   }
-}
+};
 
-  const saveDraft = () => {
-    setFormData((prev) => ({ ...prev, status: "draft" }))
-    handleSubmit()
-  }
-
-  const publishEvent = () => {
-    setFormData((prev) => ({ ...prev, status: "published" }))
-    handleSubmit()
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,36 +233,45 @@ const handleSubmit = async (e) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Debug button to auto-fill form */}
           <button
-  type="button"
-  onClick={() => {
-    setFormData({
-      title: "React Mastery",
-      description: "Learn React quickly",
-      category_id: 1,
-      start_date: "2025-08-14",
-      end_date: "2025-08-14",
-      start_time: "09:00",
-      end_time: "15:00",
-      venue_name: "Kathmandu Center",
-      location: "Kathmandu",
-      address: "Kathmandu Center, Kathmandu",
-      is_free: false,
-      agenda: [
-        { time: "09:00", description: "Opening session" },
-        { time: "12:00", description: "Main session" }
-      ],
-      speakers: [
-        { name: "Ramesh Gurung", profession: "CEO React Tech" }
-      ],
-      tags: ["react", "javascript", "webdev"],
-      organizer_id: user?.id || null,
-      status: "draft",
-    });
-  }}
->
-  Fill Form Automatically
-</button>
+            type="button"
+            onClick={() => {
+              setFormData({
+                title: "React Mastery Conference",
+                description: "Learn React quickly with industry experts",
+                category_id: "web-dev",
+                start_date: "2025-08-14",
+                end_date: "2025-08-14",
+                start_time: "09:00",
+                end_time: "15:00",
+                venue_name: "Kathmandu Center",
+                location: "Kathmandu",
+                address: "Kathmandu Center, Kathmandu",
+                capacity: "100",
+                price: "0",
+                is_free: false,
+                featured_image: null,
+                agenda: [],
+                status: "draft",
+                tags: ["react", "javascript", "webdev"],
+                organizer_id: user?.id || null,
+              })
+              setAgenda([
+                { time: "09:00", description: "Opening session" },
+                { time: "12:00", description: "Main session" }
+              ])
+              setSpeakers([
+                { name: "Ramesh Gurung", profession: "CEO React Tech" }
+              ])
+              setTicketData([
+                { name: "General Admission", type: "paid", price: 25, quantity: 100, description: "Standard access" }
+              ])
+            }}
+            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg mb-4"
+          >
+            Fill Form Automatically (Testing)
+          </button>
 
           {/* Basic Information */}
           <div className="bg-white rounded-lg shadow-sm p-6">
@@ -262,25 +318,22 @@ const handleSubmit = async (e) => {
                 <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-2">
                   Category *
                 </label>
-      
                 <select
-      id="category_id"
-      name="category_id"
-      value={formData.category_id}
-    onChange={handleChange}
-      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-    errors.category_id ? "border-red-300" : "border-gray-300"
-  }`}
->
-  <option value="">Select a category</option>
-  {categories?.map((category) => (
-    <option key={category.id} value={category.id}>
-      {category.description} {/* or use category.name */}
-      
-    </option>
-  ))}
-</select>
-
+                  id="category_id"
+                  name="category_id"
+                  value={formData.category_id}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                    errors.category_id ? "border-red-300" : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Select a category</option>
+                  {categories?.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
                 {errors.category_id && <p className="mt-1 text-sm text-red-600">{errors.category_id[0]}</p>}
               </div>
             </div>
@@ -426,19 +479,23 @@ const handleSubmit = async (e) => {
               </div>
             </div>
           </div>
-<OrganizerTicketForm
-  onChange={(updatedTickets) => {
-    setTicketData(updatedTickets);
-    console.log("Updated Ticket Data:", updatedTickets); // ✅ This logs the data in real time
-  }}
-/>
 
+          {/* Tickets */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Tickets</h2>
+            <OrganizerTicketForm
+              onChange={(updatedTickets) => {
+                setTicketData(updatedTickets)
+              }}
+            />
+            {errors.tickets && <p className="mt-1 text-sm text-red-600">{errors.tickets[0]}</p>}
+          </div>
 
           {/* Featured Image */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
               <ImageIcon className="h-5 w-5 mr-2" />
-              Featured Image
+              Featured Image *
             </h2>
 
             <div className="space-y-4">
@@ -468,6 +525,7 @@ const handleSubmit = async (e) => {
                   </label>
                 </div>
               )}
+              {errors.featured_image && <p className="mt-1 text-sm text-red-600">{errors.featured_image[0]}</p>}
             </div>
           </div>
 
@@ -515,96 +573,109 @@ const handleSubmit = async (e) => {
               )}
             </div>
           </div>
-{/* Event Agenda Section */}
-<div className="bg-white rounded-lg shadow-sm p-6">
-  <h2 className="text-lg font-semibold text-gray-900 mb-6">Event Agenda</h2>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-   <input
-  type="time"
-  name="time"
-  value={currentAgendaItem.time}
-  onChange={handleAgendaChange}
-  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-/>
+          {/* Event Agenda Section */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Event Agenda</h2>
 
-    <input
-      type="text"
-      name="description"
-      value={currentAgendaItem.description}
-      onChange={handleAgendaChange}
-      placeholder="Description (e.g., Registration & Welcome Coffee)"
-      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-    />
-  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <input
+                type="time"
+                name="time"
+                value={currentAgendaItem.time}
+                onChange={handleAgendaChange}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <input
+                type="text"
+                name="description"
+                value={currentAgendaItem.description}
+                onChange={handleAgendaChange}
+                placeholder="Description (e.g., Registration & Welcome Coffee)"
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
 
-  <button
-    type="button"
-    onClick={addAgendaItem}
-    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-  >
-    Add Agenda Item
-  </button>
+            <button
+              type="button"
+              onClick={addAgendaItem}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Add Agenda Item
+            </button>
 
-  {/* List of Added Agenda Items */}
-  {agenda.length > 0 && (
-    <ul className="mt-4 space-y-2">
-      {agenda.map((item, index) => (
-        <li key={index} className="flex justify-between items-center bg-primary-100 text-primary-800 px-4 py-2 rounded-lg">
-          <span>
-            <strong>{item.time}</strong>: {item.description}
-          </span>
-          <button
-            type="button"
-            onClick={() => removeAgendaItem(index)}
-            className="text-red-600 hover:text-red-800"
-          >
-            Remove
-          </button>
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
-<div className="space-y-4">
-  <h3 className="text-lg font-semibold">Speakers</h3>
+            {/* List of Added Agenda Items */}
+            {agenda.length > 0 && (
+              <ul className="mt-4 space-y-2">
+                {agenda.map((item, index) => (
+                  <li key={index} className="flex justify-between items-center bg-primary-100 text-primary-800 px-4 py-2 rounded-lg">
+                    <span>
+                      <strong>{item.time}</strong>: {item.description}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeAgendaItem(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-  {speakers.map((speaker, index) => (
-    <div key={index} className="flex flex-col md:flex-row gap-4">
-      <input
-        type="text"
-        value={speaker.name}
-        onChange={(e) => {
-          const newSpeakers = [...speakers]
-          newSpeakers[index].name = e.target.value
-          setSpeakers(newSpeakers)
-        }}
-        placeholder="Speaker Name"
-        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-      />
+          {/* Speakers Section */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Speakers</h2>
 
-      <input
-        type="text"
-        value={speaker.profession}
-        onChange={(e) => {
-          const newSpeakers = [...speakers]
-          newSpeakers[index].profession = e.target.value
-          setSpeakers(newSpeakers)
-        }}
-        placeholder="Profession / Title"
-        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-      />
-    </div>
-  ))}
+            <div className="space-y-4">
+              {speakers.map((speaker, index) => (
+                <div key={index} className="flex flex-col md:flex-row gap-4 mb-4">
+                  <input
+                    type="text"
+                    value={speaker.name}
+                    onChange={(e) => {
+                      const newSpeakers = [...speakers]
+                      newSpeakers[index].name = e.target.value
+                      setSpeakers(newSpeakers)
+                    }}
+                    placeholder="Speaker Name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={speaker.profession}
+                    onChange={(e) => {
+                      const newSpeakers = [...speakers]
+                      newSpeakers[index].profession = e.target.value
+                      setSpeakers(newSpeakers)
+                    }}
+                    placeholder="Profession / Title"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSpeakers = speakers.filter((_, i) => i !== index)
+                      setSpeakers(newSpeakers)
+                    }}
+                    className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
 
-  <button
-    type="button"
-    onClick={() => setSpeakers([...speakers, { name: "", profession: "" }])}
-    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-  >
-    + Add Speaker
-  </button>
-</div>
+              <button
+                type="button"
+                onClick={() => setSpeakers([...speakers, { name: "", profession: "" }])}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              >
+                + Add Speaker
+              </button>
+            </div>
+          </div>
 
           {/* Submit Buttons */}
           <div className="flex justify-end space-x-4">
@@ -617,7 +688,7 @@ const handleSubmit = async (e) => {
             </button>
             <button
               type="button"
-              onClick={saveDraft}
+              //onClick={saveDraft}
               disabled={loading}
               className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 disabled:opacity-50"
             >
@@ -625,7 +696,7 @@ const handleSubmit = async (e) => {
             </button>
             <button
               type="button"
-              onClick={publishEvent}
+              onClick={handleSubmit}
               disabled={loading}
               className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
             >
@@ -633,6 +704,16 @@ const handleSubmit = async (e) => {
             </button>
           </div>
         </form>
+
+        {/* Payload Log Section */}
+        {payloadLog && (
+          <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Payload Log</h2>
+            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto text-sm">
+              {payloadLog}
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   )

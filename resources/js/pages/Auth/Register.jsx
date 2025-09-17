@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertCircle, CalendarDays, CheckCircle, Eye, EyeOff } from "lucide-react"
+import { AlertCircle, Building2, CalendarDays, CheckCircle, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
@@ -12,8 +12,10 @@ const Register = () => {
     password: "",
     password_confirmation: "",
     role: "user",
+    organizationName: "",
     terms: false,
   })
+  const [kycDocument, setKycDocument] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
@@ -25,26 +27,30 @@ const Register = () => {
   const validateForm = () => {
     const newErrors = {}
 
-    if (!formData.name) {
-      newErrors.name = "Name is required"
-    } else if (formData.name.length < 2) {
-      newErrors.name = "Name must be at least 2 characters"
-    }
     if (!formData.name.trim()) {
-  newErrors.name = "Full name is required"
-} else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
-  newErrors.name = "Name can only contain letters and spaces"
-} else if (formData.name.trim().split(/\s+/).length < 2) {
-  newErrors.name = "Please enter your full name (first and last)"
-} else if (formData.name.trim().split(/\s+/).some(word => word.length < 2)) {
-  newErrors.name = "Each name part must be at least 2 characters"
-}
-
+      newErrors.name = "Full name is required"
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      newErrors.name = "Name can only contain letters and spaces"
+    } else if (formData.name.trim().split(/\s+/).length < 2) {
+      newErrors.name = "Please enter your full name (first and last)"
+    } else if (formData.name.trim().split(/\s+/).some(word => word.length < 2)) {
+      newErrors.name = "Each name part must be at least 2 characters"
+    }
 
     if (!formData.email) {
       newErrors.email = "Email is required"
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid"
+    }
+
+    // Validate organization name if organizer is selected
+    if (formData.role === "organizer" && !formData.organizationName.trim()) {
+      newErrors.organizationName = "Organization name is required"
+    }
+
+    // Validate KYC document if organizer
+    if (formData.role === "organizer" && !kycDocument) {
+      newErrors.kycDocument = "Verification document is required for organizers"
     }
 
     if (!formData.password) {
@@ -85,6 +91,27 @@ const Register = () => {
     }
   }
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check file size (e.g., 5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({...errors, kycDocument: "File size must be less than 5MB"})
+        return
+      }
+      
+      // Check file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+      if (!validTypes.includes(file.type)) {
+        setErrors({...errors, kycDocument: "Please upload a JPEG, PNG, or PDF file"})
+        return
+      }
+      
+      setKycDocument(file)
+      setErrors({...errors, kycDocument: ""})
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -95,7 +122,26 @@ const Register = () => {
     setIsSubmitting(true)
 
     try {
-      const response = await register(formData)
+      // Create FormData object for file upload
+      const formDataToSend = new FormData()
+      formDataToSend.append('name', formData.name)
+      formDataToSend.append('email', formData.email)
+      formDataToSend.append('password', formData.password)
+      formDataToSend.append('password_confirmation', formData.password_confirmation)
+      formDataToSend.append('role', formData.role)
+      formDataToSend.append('terms', formData.terms)
+      
+      // Include organization name if organizer
+      if (formData.role === "organizer") {
+        formDataToSend.append('organizationName', formData.organizationName)
+        
+        // Append document if available
+        if (kycDocument) {
+          formDataToSend.append('kycDocument', kycDocument)
+        }
+      }
+
+      const response = await register(formDataToSend)
 
       // Redirect based on user role
       if (response.user.role === "admin") {
@@ -151,6 +197,38 @@ const Register = () => {
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Account Type
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: "user"})}
+                  className={`flex-1 py-2 px-4 rounded-md border ${
+                    formData.role === "user" 
+                      ? "bg-blue-100 border-blue-500 text-blue-700" 
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  } transition-colors`}
+                >
+                  Attendee
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: "organizer"})}
+                  className={`flex-1 py-2 px-4 rounded-md border ${
+                    formData.role === "organizer" 
+                      ? "bg-blue-100 border-blue-500 text-blue-700" 
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  } transition-colors flex items-center justify-center`}
+                >
+                  <Building2 className="h-4 w-4 mr-1" />
+                  Organizer
+                </button>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Full Name
@@ -193,21 +271,28 @@ const Register = () => {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Account Type
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-              >
-                <option value="user">Attendee</option>
-                <option value="organizer">Event Organizer</option>
-              </select>
-            </div>
+            {/* Organization Name Field (Conditional) */}
+            {formData.role === "organizer" && (
+              <div>
+                <label htmlFor="organizationName" className="block text-sm font-medium text-gray-700">
+                  Organization Name
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="organizationName"
+                    name="organizationName"
+                    type="text"
+                    value={formData.organizationName}
+                    onChange={handleChange}
+                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.organizationName ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Enter your organization name"
+                  />
+                  {errors.organizationName && <p className="mt-1 text-sm text-red-600">{errors.organizationName}</p>}
+                </div>
+              </div>
+            )}
 
             {/* Conditional File Input */}
             {formData.role === "organizer" && (
@@ -220,11 +305,14 @@ const Register = () => {
                   id="kycDocument"
                   name="kycDocument"
                   accept="image/*,application/pdf"
-                  onChange={handleChange}
+                  onChange={handleFileChange}
                   className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
+                {errors.kycDocument && <p className="mt-1 text-sm text-red-600">{errors.kycDocument}</p>}
+                <p className="text-xs text-gray-500 mt-1">Accepted formats: JPG, PNG, PDF. Max size: 5MB</p>
               </div>
             )}
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -394,7 +482,7 @@ const Register = () => {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
-                    d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
+                    d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 极速赛车开奖结果 极速赛车开奖记录 极速赛车开奖直播"
                     clipRule="evenodd"
                   />
                 </svg>

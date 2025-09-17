@@ -1,133 +1,63 @@
 <?php
 
-// namespace App\Http\Controllers;
-// use Illuminate\Http\Request;
-// use Illuminate\Support\Facades\Log;
-// use Illuminate\Support\Facades\DB;
-// use App\Models\Event;
-// use App\Models\Ticket;
-// use App\Models\EventAgenda;
-// use App\Models\Speaker;
-// use App\Models\EventTag;
+namespace App\Http\Controllers;
 
-// class EventController extends Controller
-// {
-//     public function store(Request $request)
-//     {
-//         // Log the full incoming request for debugging
-//         Log::info('Incoming Event Create Request:', $request->all());
+use App\Models\Event;
+use App\Models\Ticket;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use MongoDB\BSON\ObjectId;
 
-//         DB::beginTransaction();
-
-//         try {
-//             //  Create the event
-//             $event = Event::create([
-//                 'title'          => $request->title,
-//                 'description'    => $request->description,
-//                 'category_id'    => $request->category_id,
-//                 'start_date'     => $request->start_date,
-//                 'end_date'       => $request->end_date,
-//                 'start_time'     => $request->start_time,
-//                 'end_time'       => $request->end_time,
-//                 'venue_name'     => $request->venue_name,
-//                 'location'       => $request->location,
-//                 'address'        => $request->address,
-//                 'is_free'        => $request->is_free,
-//                 'featured_image' => $request->featured_image ?? null,
-//                 'status'         => $request->status ?? 'draft',
-//                 'organizer_id'   => $request->organizer_id,
-//             ]);
-
-//             //  Create tickets if provided
-//             if ($request->has('tickets') && is_array($request->tickets)) {
-//                 foreach ($request->tickets as $ticket) {
-//                     Ticket::create([
-//                         'event_id' => $event->id,
-//                         'name'     => $ticket['name'],
-//                         'price'    => $ticket['price'],
-//                         'capacity' => $ticket['capacity']
-//                     ]);
-//                 }
-//             }
-
-//             // Create agendas if provided
-//             if ($request->has('agenda') && is_array($request->agenda)) {
-//                 foreach ($request->agenda as $item) {
-//                     EventAgenda::create([
-//                         'event_id'    => $event->id,
-//                         'time'        => $item['time'],
-//                         'description' => $item['description']
-//                     ]);
-//                 }
-//             }
-
-//             // Create speakers if provided
-//             if ($request->has('speakers') && is_array($request->speakers)) {
-//                 foreach ($request->speakers as $speaker) {
-//                     Speaker::create([
-//                         'event_id'   => $event->id,
-//                         'name'       => $speaker['name'],
-//                         'profession' => $speaker['profession']
-//                     ]);
-//                 }
-//             }
-
-//             //  Create tags if provided
-//             if ($request->has('tags') && is_array($request->tags)) {
-//                 foreach ($request->tags as $tag) {
-//                     EventTag::create([
-//                         'event_id' => $event->id,
-//                         'tag'      => $tag
-//                     ]);
-//                 }
-//             }
-
-//             DB::commit();
-
-//             // Return the event with relationships for immediate verification
-//             $event->load(['tickets', 'agendas', 'speakers', 'tags']);
-
-//             return response()->json([
-//                 'success' => true,
-//                 'message' => 'Event created successfully',
-//                 'data'    => $event
-//             ], 201);
-
-//         } catch (\Exception $e) {
-//             DB::rollBack();
-
-//             // Log the error for debugging
-//             Log::error('Event creation failed: ' . $e->getMessage(), [
-//                 'trace' => $e->getTraceAsString()
-//             ]);
-
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Event creation failed',
-//                 'error'   => $e->getMessage()
-//             ], 500);
-//         }
-//     }
-// }
-
-// Decode JSON arrays safely
-private function decodeJsonArray($jsonString, $default = [])
+class EventController extends Controller
 {
-    if (!$jsonString) return $default;
-    $decoded = json_decode($jsonString, true);
-    return is_array($decoded) ? $decoded : $default;
-}
-
 public function store(Request $request)
 {
-    // Validation here (same as before) ...
-    DB::beginTransaction();
+    $validator = Validator::make($request->all(), [
+        'title'       => 'required|string|max:255',
+        'description' => 'required|string',
+        'category_id' => 'required|string',
+        'start_date'  => 'required|date',
+        'end_date'    => 'required|date',
+        'start_time'  => 'required',
+        'end_time'    => 'required',
+        'venue_name'  => 'nullable|string',
+        'location'    => 'nullable|string',
+        'address'     => 'nullable|string',
+        'capacity'    => 'nullable|integer',
+        'tags'        => 'nullable|string', // JSON
+        'agenda'      => 'nullable|string', // JSON
+        'speakers'    => 'nullable|string', // JSON
+        'tickets'     => 'nullable|string', // JSON
+        'status'      => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
 
     try {
-        $featuredImagePath = $request->hasFile('featured_image')
-            ? $request->file('featured_image')->store('events', 'public')
-            : null;
+        // ✅ get organizer from authenticated user
+        $organizer = auth()->user();
 
+        if (!$organizer) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Featured image
+        $imageUrl = null;
+        if ($request->hasFile('featured_image')) {
+            $imagePath = $request->file('featured_image')->store('events', 'public');
+            $imageUrl = Storage::disk('public')->url($imagePath);
+        }
+
+        // Decode JSON arrays
+        $agenda   = json_decode($request->agenda ?? '[]', true);
+        $speakers = json_decode($request->speakers ?? '[]', true);
+        $tags     = json_decode($request->tags ?? '[]', true);
+        $tickets  = json_decode($request->tickets ?? '[]', true);
+
+        // ✅ Create event with authenticated organizer_id
         $event = Event::create([
             'title'          => $request->title,
             'description'    => $request->description,
@@ -139,72 +69,100 @@ public function store(Request $request)
             'venue_name'     => $request->venue_name,
             'location'       => $request->location,
             'address'        => $request->address,
-            'is_free'        => $request->is_free ?? false,
-            'featured_image' => $featuredImagePath,
-            'status'         => $request->status ?? 'draft',
-            'organizer_id'   => $request->organizer_id,
+            'capacity'       => $request->capacity,
+            'status'         => $request->status,
+            'featured_image' => $imageUrl,
+            'agenda'         => $agenda,
+            'speakers'       => $speakers,
+            'tags'           => $tags,
+            'organizer_id'   => $organizer->_id, // ✅ from JWT, not request
         ]);
 
-        // ✅ Safely decode JSON arrays
-        $tickets  = $this->decodeJsonArray($request->tickets);
-        $agenda   = $this->decodeJsonArray($request->agenda);
-        $speakers = $this->decodeJsonArray($request->speakers);
-        $tags     = $this->decodeJsonArray($request->tags);
-
+        // ✅ Create tickets linked to this event and organizer
         foreach ($tickets as $ticket) {
             Ticket::create([
-                'event_id' => $event->id,
-                'name'     => $ticket['name'] ?? '',
-                'price'    => $ticket['price'] ?? 0,
-                'capacity' => $ticket['capacity'] ?? 0,
+                'event_id'        => $event->_id,
+                'organizer_id'    => $organizer->_id,
+                'type'            => $ticket['name'] ?? 'General',
+                'price'           => $ticket['price'] ?? 0,
+                'quantity'        => $ticket['capacity'] ?? 0,
+                'description'     => $ticket['description'] ?? '',
+                'sale_start_date' => $ticket['sale_start_date'] ?? null,
+                'sale_end_date'   => $ticket['sale_end_date'] ?? null,
+                'is_free'         => $ticket['is_free'] ?? false,
+                'sold'            => 0,
             ]);
         }
-
-        foreach ($agenda as $item) {
-            EventAgenda::create([
-                'event_id'    => $event->id,
-                'time'        => $item['time'] ?? null,
-                'description' => $item['description'] ?? '',
-            ]);
-        }
-
-        foreach ($speakers as $speaker) {
-            Speaker::create([
-                'event_id'   => $event->id,
-                'name'       => $speaker['name'] ?? '',
-                'profession' => $speaker['profession'] ?? '',
-            ]);
-        }
-
-        foreach ($tags as $tag) {
-            EventTag::create([
-                'event_id' => $event->id,
-                'tag'      => $tag,
-            ]);
-        }
-
-        DB::commit();
-
-        $event->load(['tickets', 'agendas', 'speakers', 'tags']);
 
         return response()->json([
-            'success' => true,
             'message' => 'Event created successfully',
-            'data'    => $event
+            'data'    => $event,
+            'id'      => (string) $event->_id,
         ], 201);
 
     } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Event creation failed', [
-            'message' => $e->getMessage(),
-            'trace'   => $e->getTraceAsString(),
-            'request' => $request->all(),
-        ]);
-
         return response()->json([
-            'success' => false,
-            'message' => 'Event creation failed',
+            'message' => 'Error creating event',
             'error'   => $e->getMessage(),
         ], 500);
     }
+}
+
+
+public function organizerEvents(Request $request)
+{
+    $organizer = auth()->user(); // JWT-authenticated organizer
+    $organizerId = $organizer->_id;
+
+    $query = Event::where('organizer_id', $organizerId);
+
+    // Search filter
+    if ($request->filled('search')) {
+        $query->where('title', 'like', $request->search);
+    }
+
+    // Sorting
+    $sortBy = $request->get('sort_by', 'created_at');
+    $sortOrder = $request->get('sort_order', 'desc');
+    $query->orderBy($sortBy, $sortOrder);
+
+    // Pagination
+    $perPage = 10;
+    $page = $request->get('page', 1);
+
+    $events = $query->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+    // Add category and booked tickets count
+    $events->transform(function ($event) {
+        // If tickets are embedded in Event
+        if (isset($event->tickets)) {
+            $event->booked_count = collect($event->tickets)
+                ->where('sold', '>', 0)
+                ->count();
+        } 
+        // If tickets are in a separate collection
+        else {
+            $event->booked_count = \App\Models\Ticket::where('event_id', $event->_id)
+                ->where('sold', '>', 0)
+                ->count();
+        }
+
+        // Load category manually (MongoDB does not support Eloquent relations fully)
+        if (isset($event->category_id)) {
+            $event->category = \App\Models\Category::find($event->category_id);
+        }
+
+        return $event;
+    });
+
+    return response()->json([
+        'current_page' => (int) $page,
+        'per_page' => $perPage,
+        'total' => $query->count(),
+        'data' => $events,
+    ]);
+}
+
 }

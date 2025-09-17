@@ -43,20 +43,20 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   // Login function
-  const login = async (email, password) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await apiService.login(email, password)
-      setUser(response.user)
-      return response
-    } catch (err) {
-      setError(err.message || "Failed to login")
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
+  // const login = async (email, password) => {
+  //   setLoading(true)
+  //   setError(null)
+  //   try {
+  //     const response = await apiService.login(email, password)
+  //     setUser(response.user)
+  //     return response
+  //   } catch (err) {
+  //     setError(err.message || "Failed to login")
+  //     throw err
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   // Register function
   // const register = async (userData) => {
@@ -74,9 +74,35 @@ export const AuthProvider = ({ children }) => {
   //   }
   // }
   
+  const login = async ({ email, password, role, organizationName }) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Send only strings, not DOM elements
+      const payload = { email, password };
+      if (role === "organizer") {
+        payload.organizationName = organizationName;
+      }
+
+      const response = await apiService.login(payload);
+
+      // Set user in context
+      setUser(response.user);
+
+      return response; // contains user + token
+    } catch (err) {
+      setError(err.message || "Failed to login");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
 const register = async (userData) => {
   setLoading(true);
   setError(null);
+  console.log(userData)
   try {
     const response = await apiService.register(userData);
     setUser(response.user);  // access user directly here

@@ -2,67 +2,73 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use MongoDB\Laravel\Eloquent\Model as Eloquent;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Eloquent implements AuthenticatableContract, JWTSubject
 {
-    use HasFactory, Notifiable;
+    use Authenticatable, SoftDeletes;
 
+    // Use the 'mongodb' connection
+    protected $connection = 'mongodb';
+
+    // Optional: specify the collection name (default: 'users')
+    protected $collection = 'users';
+
+    // Fillable fields for mass assignment
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
+        'organization_name',
+        'kyc_document_path',
     ];
 
+    // Hidden fields from JSON responses
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    // Casts for attributes
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'deleted_at' => 'datetime',
     ];
 
-    public function events()
-    {
-        return $this->hasMany(Event::class, 'created_by');
-    }
+    // Dates to be treated as Carbon instances
+    protected $dates = ['deleted_at'];
 
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class);
-    }
-
-    // === Role Check Methods ===
-    public function isAdmin()
-    {
-        return $this->role === 'admin';
-    }
-
-    public function isOrganizer()
-    {
-        return $this->role === 'organizer';
-    }
-
-    public function isUser()
-    {
-        return $this->role === 'user';
-    }
-
-    // === JWT Methods ===
+    // JWT: Get the identifier that will be stored in the token
     public function getJWTIdentifier()
     {
-        return $this->getKey();
+        return $this->getKey(); // Returns the _id
     }
 
-    public function getJWTCustomClaims(): array
+    // JWT: Return any custom claims to be added to the token
+    public function getJWTCustomClaims()
     {
-        return [];
+        return [
+            'id' => $this->getKey(),
+            'name' => $this->name,
+            'email' => $this->email,
+            'role' => $this->role,
+        ];
     }
-    
+
+    // Optional: Mutator for email (force lowercase)
+    public function setEmailAttribute($value)
+    {
+        $this->attributes['email'] = strtolower($value);
+    }
+
+    // Optional: Accessor for role (default to 'user')
+    public function getRoleAttribute($value)
+    {
+        return $value ?: 'user';
+    }
 }

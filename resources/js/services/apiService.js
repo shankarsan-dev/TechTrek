@@ -226,10 +226,14 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+     if (config.data instanceof FormData) {
+      config.headers["Content-Type"] = "multipart/form-data";
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
+
 
 // Optional: handle unauthorized globally (e.g., logout user)
 api.interceptors.response.use(
@@ -245,10 +249,11 @@ api.interceptors.response.use(
 );
 
 export const apiService = {
-  // Login user
-  login: async (email, password) => {
+
+login: async (payload) => {
     try {
-      const response = await api.post("/login", { email, password });
+      //console.log("Login payload:", payload); 
+      const response = await api.post("/login", payload);
 
       if (response.data.token) {
         localStorage.setItem("auth_token", response.data.token);
@@ -257,27 +262,60 @@ export const apiService = {
 
       return response.data;
     } catch (error) {
+      //console.log("Login error response:", error.response?.data);
       throw new Error(error.response?.data?.message || "Login failed");
     }
-  },
-
-  // Register new user
-  register: async (formData) => {
-    try {
-      // If formData is a JS object and not FormData, you can send JSON by default
-      // Remove the commented multipart header unless you upload files
-      const response = await api.post("/register", formData);
-
-      if (response.data.token) {
-        localStorage.setItem("auth_token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+  }
+,
+// Register new user
+register: async (formData) => {
+  try {
+    // Determine if we're sending FormData (for file upload) or JSON
+    const isFormData = formData instanceof FormData;
+    
+    const config = {
+      headers: {
+        'Content-Type': isFormData ? 'multipart/form-data' : 'application/json'
       }
+    };
 
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || "Registration failed");
+    const response = await api.post("/register", formData, config);
+
+    if (response.data.token) {
+      localStorage.setItem("auth_token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
     }
-  },
+
+    return response.data;
+  } catch (error) {
+    // Improved error handling
+    const errorMessage = error.response?.data?.message ||error.response?.data?.error ||  error.message || "Registration failed";
+    throw new Error(errorMessage);
+  }
+},
+createEvent: async (formData) => {
+  try {
+    const isFormData = formData instanceof FormData;
+
+    const config = {
+      headers: {
+        "Content-Type": isFormData ? "multipart/form-data" : "application/json",
+      },
+    };
+
+    const response = await api.post("/events", formData, config);
+
+    return response.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "Event creation failed";
+    throw new Error(errorMessage);
+  }
+}
+,
 
   // Logout user
   logout: async () => {
@@ -300,7 +338,68 @@ export const apiService = {
       throw new Error(error.response?.data?.message || "Failed to get user");
     }
   },  
+//  getOrganizerEvents: async ({ search, status, sort_by, sort_order, page }) => {
+//     try {
+//       const token = localStorage.getItem("token"); // JWT token
 
+//       const params = {};
+//       if (search) params.search = search;
+//       if (status) params.status = status;
+//       if (sort_by) params.sort_by = sort_by;
+//       if (sort_order) params.sort_order = sort_order;
+//       if (page) params.page = page;
+
+//       const response = await api.get("/organizer/events", {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//         params,
+//       });
+
+//       return response.data; // return JSON directly
+//     } catch (error) {
+//       const errorMessage =
+//         error.response?.data?.message ||
+//         error.response?.data?.error ||
+//         error.message ||
+//         "Failed to fetch organizer events";
+//       throw new Error(errorMessage);
+//     }
+//   },
+
+ getOrganizerEvents: async ({ search, status, sort_by, sort_order, page = 1 }) => {
+    try {
+      const token = localStorage.getItem("token"); // JWT token
+
+      const params = {
+        page,
+      };
+      if (search) params.search = search;
+      if (status) params.status = status;
+      if (sort_by) params.sort_by = sort_by;
+      if (sort_order) params.sort_order = sort_order;
+
+      const response = await api.get("/organizer/events", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params,
+      });
+
+      // Returning both data and pagination info
+      return {
+        data: response.data.data, // actual events
+        meta: response.data.meta, // pagination info
+      };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to fetch organizer events";
+      throw new Error(errorMessage);
+    }
+  },
   // Password reset flow
   forgotPassword: async (email) => {
     try {
@@ -386,18 +485,8 @@ export const apiService = {
     return response.data;
   },
 
-  createEvent: async (formData) => {
-  try {
-    const response = await api.post("/events", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-},
+
+// },
   updateEvent: async (id, formData) => {
     try {
       const response = await api.put(`/events/${id}`, formData, {

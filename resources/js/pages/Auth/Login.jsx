@@ -1,15 +1,17 @@
 "use client"
 
+import { AlertCircle, Building2, CalendarDays, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
-import { CalendarDays, Eye, EyeOff, AlertCircle } from "lucide-react"
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     remember: false,
+    role: "user", // Default role
+    organizationName: "", // New field for organizers
   })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
@@ -34,6 +36,11 @@ const Login = () => {
       newErrors.password = "Password is required"
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters"
+    }
+
+    // Validate organization name if organizer is selected
+    if (formData.role === "organizer" && !formData.organizationName.trim()) {
+      newErrors.organizationName = "Organization name is required"
     }
 
     setErrors(newErrors)
@@ -66,7 +73,19 @@ const Login = () => {
     setIsSubmitting(true)
 
     try {
-      const response = await login(formData.email, formData.password)
+      // Prepare login data based on role
+      const loginData = {
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      }
+      
+      // Include organization name if organizer
+      if (formData.role === "organizer") {
+        loginData.organizationName = formData.organizationName;
+      }
+
+      const response = await login(loginData)
 
       // Redirect based on user role
       if (response.user.role === "admin") {
@@ -110,6 +129,38 @@ const Login = () => {
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Login as
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: "user"})}
+                  className={`flex-1 py-2 px-4 rounded-md border ${
+                    formData.role === "user" 
+                      ? "bg-blue-100 border-blue-500 text-blue-700" 
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  } transition-colors`}
+                >
+                  User
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: "organizer"})}
+                  className={`flex-1 py-2 px-4 rounded-md border ${
+                    formData.role === "organizer" 
+                      ? "bg-blue-100 border-blue-500 text-blue-700" 
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  } transition-colors flex items-center justify-center`}
+                >
+                  <Building2 className="h-4 w-4 mr-1" />
+                  Organizer
+                </button>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -130,6 +181,29 @@ const Login = () => {
                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
               </div>
             </div>
+
+            {/* Organization Name Field (Conditional) */}
+            {formData.role === "organizer" && (
+              <div>
+                <label htmlFor="organizationName" className="block text-sm font-medium text-gray-700">
+                  Organization Name
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="organizationName"
+                    name="organizationName"
+                    type="text"
+                    value={formData.organizationName}
+                    onChange={handleChange}
+                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.organizationName ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Enter your organization name"
+                  />
+                  {errors.organizationName && <p className="mt-1 text-sm text-red-600">{errors.organizationName}</p>}
+                </div>
+              </div>
+            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
