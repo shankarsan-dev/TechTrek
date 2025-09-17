@@ -19,6 +19,7 @@ import OrganizerAnalytics from "./pages/Organizer/Analytics"
 import OrganizerAttendees from "./pages/Organizer/Attendees"
 import CreateEvent from "./pages/Organizer/CreateEvent"
 import OrganizerDashboard from "./pages/Organizer/Dashboard"
+import OrganizerEventDetails from "./pages/Organizer/EventDetails"
 import EventEdit from "./pages/Organizer/EventEdit"
 import OrganizerEvents from "./pages/Organizer/Events"
 import OrganizerSettings from "./pages/Organizer/Settings"
@@ -94,6 +95,7 @@ function App() {
                 <Route path="dashboard" element={<OrganizerDashboard />} />
                 <Route path="events" element={<OrganizerEvents />} />
                 <Route path="events/create" element={<CreateEvent />} />
+                <Route path="events/:id" element={<OrganizerEventDetails />} />
                 <Route path="events/:id/edit" element={<EventEdit />} />
                 <Route path="analytics" element={<OrganizerAnalytics />} />
                 <Route path="attendees" element={<OrganizerAttendees />} />

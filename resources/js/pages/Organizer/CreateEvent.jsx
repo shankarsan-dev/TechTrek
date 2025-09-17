@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import OrganizerTicketForm from "../../components/Organizer/OrganizerTicketForm"
 import { useAuth } from "../../contexts/AuthContext"
-import { apiService } from "../../services/apiService"
+import { eventService } from "../../services/eventService"
 
 const CreateEvent = () => {
   const { user, logout } = useAuth()
@@ -44,11 +44,11 @@ const CreateEvent = () => {
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
-    queryFn: apiService.getCategories,
+    queryFn: eventService.getCategories,
   })
 
   const createEventMutation = useMutation({
-    mutationFn: apiService.createEvent,
+    mutationFn: eventService.createEvent,
     onSuccess: (data) => {
       queryClient.invalidateQueries(["organizer-events"])
       navigate(`/organizer/events/${data.id}`)

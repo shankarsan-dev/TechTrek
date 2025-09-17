@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { apiService } from "../services/apiService"
+import { authService } from "../services/authService"
 
 const AuthContext = createContext()
 
@@ -27,10 +27,10 @@ export const AuthProvider = ({ children }) => {
       if (token && storedUser) {
         try {
           // Verify token is still valid by fetching current user
-          const userData = await apiService.getCurrentUser()
+          const userData = await authService.getCurrentUser()
           setUser(userData.user || JSON.parse(storedUser))
         } catch (error) {
-          // Token is invalid, clear storage
+          // Token is invalid, clear storageS
           localStorage.removeItem("auth_token")
           localStorage.removeItem("user")
           setUser(null)
@@ -41,38 +41,6 @@ export const AuthProvider = ({ children }) => {
 
     initializeAuth()
   }, [])
-
-  // Login function
-  // const login = async (email, password) => {
-  //   setLoading(true)
-  //   setError(null)
-  //   try {
-  //     const response = await apiService.login(email, password)
-  //     setUser(response.user)
-  //     return response
-  //   } catch (err) {
-  //     setError(err.message || "Failed to login")
-  //     throw err
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
-  // Register function
-  // const register = async (userData) => {
-  //   setLoading(true)
-  //   setError(null)
-  //   try {
-  //     const response = await apiService.register(userData)
-  //     setUser(response.data.user)
-  //     return response
-  //   } catch (err) {
-  //     setError(err.message || "Failed to register")
-  //     throw err
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
   
   const login = async ({ email, password, role, organizationName }) => {
     setLoading(true);
@@ -85,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         payload.organizationName = organizationName;
       }
 
-      const response = await apiService.login(payload);
+      const response = await authService.login(payload);
 
       // Set user in context
       setUser(response.user);
@@ -104,7 +72,7 @@ const register = async (userData) => {
   setError(null);
   console.log(userData)
   try {
-    const response = await apiService.register(userData);
+    const response = await authService.register(userData);
     setUser(response.user);  // access user directly here
     return response;
   } catch (err) {
@@ -119,7 +87,7 @@ const register = async (userData) => {
   const logout = async () => {
     setLoading(true)
     try {
-      await apiService.logout()
+      await authService.logout()
     } catch (error) {
       console.error("Logout error:", error)
     } finally {
@@ -133,7 +101,7 @@ const register = async (userData) => {
     setLoading(true)
     setError(null)
     try {
-      const response = await apiService.forgotPassword(email)
+      const response = await authService.forgotPassword(email)
       return response
     } catch (err) {
       setError(err.message || "Failed to send reset email")
@@ -148,7 +116,7 @@ const register = async (userData) => {
     setLoading(true)
     setError(null)
     try {
-      const response = await apiService.resetPassword(token, email, password, password_confirmation)
+      const response = await authService.resetPassword(token, email, password, password_confirmation)
       return response
     } catch (err) {
       setError(err.message || "Password reset failed")
