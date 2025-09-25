@@ -60,6 +60,9 @@ export const eventService = {
         "Failed to fetch event details"
     );
   }
+},getUpcomingNearestEvents: async (limit = 3) => {
+  const response = await api.get(`/events/upcoming-nearest?limit=${limit}`);
+  return response.data.events; // adjust according to backend response
 }
 
 };

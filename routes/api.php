@@ -15,7 +15,7 @@ use App\Http\Controllers\CategoryController;
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/categories', [CategoryController::class, 'index']);
-
+Route::get('/upcoming-nearest', [EventController::class, 'upcomingNearest']);
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (JWT Auth)

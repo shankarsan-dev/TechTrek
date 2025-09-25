@@ -18,6 +18,7 @@ import OrganizerLayout from "./components/Layout/OrganizerLayout"
 import OrganizerAnalytics from "./pages/Organizer/Analytics"
 import OrganizerAttendees from "./pages/Organizer/Attendees"
 import CreateEvent from "./pages/Organizer/CreateEvent"
+import { CreateEventWizard } from "./pages/Organizer/CreateEventWizard"
 import OrganizerDashboard from "./pages/Organizer/Dashboard"
 import OrganizerEventDetails from "./pages/Organizer/EventDetails"
 import EventEdit from "./pages/Organizer/EventEdit"
@@ -56,6 +57,7 @@ function App() {
               <Route path="/unauthorized" element={<Unauthorized />} />
 
               {/* Public Routes */}
+              < Route path="create-events"element={<CreateEventWizard></CreateEventWizard>}/>
               <Route path="/" element={<Layout />}>
                 <Route index element={<HomeRedirect />} />
                  <Route  path ="home" element={<Home />} />

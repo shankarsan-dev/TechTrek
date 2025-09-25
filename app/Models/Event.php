@@ -60,13 +60,18 @@ class Event extends Model
         'end_time',
         'venue_name',
         'location',
-        'address',
         'capacity',
         'featured_image',
         'agenda',
         'tags',
         'organizer_id',
         'speakers',
+        'longitude',
+        'latitude',
+        'status',
+        'is_free',
+        'price',
+        'booked_count',
     ];
 
     protected $casts = [

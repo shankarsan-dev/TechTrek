@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, Calendar, ImageIcon, MapPin, Upload, X } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import MapPicker from "../../components/Organizer/MapPicker"
 import OrganizerTicketForm from "../../components/Organizer/OrganizerTicketForm"
 import { useAuth } from "../../contexts/AuthContext"
 import { eventService } from "../../services/eventService"
@@ -26,12 +27,15 @@ const CreateEvent = () => {
     address: "",
     capacity: "",
     price: "",
+  latitude: "",      // numeric string or number
+  longitude: "",     // numeric string or number
     is_free: false,
     featured_image: null,
     agenda: [],
     status: "draft",
     tags: [],
     organizer_id: user?.id || null,
+    
   })
   const [agenda, setAgenda] = useState([])
   const [currentAgendaItem, setCurrentAgendaItem] = useState({ time: "", description: "" })
@@ -177,8 +181,11 @@ const handleSubmit = async (e) => {
     submitData.append("end_time", formData.end_time);
     submitData.append("venue_name", formData.venue_name || "");
     submitData.append("location", formData.location || "");
-    submitData.append("address", formData.address || "");
+    //submitData.append("address", formData.address || "");
+    
     submitData.append("status", formData.status || "draft");
+submitData.append("latitude", formData.latitude || "");
+submitData.append("longitude", formData.longitude || "");
 
     // Numeric fields
     submitData.append("organizer_id", formData.organizer_id || "");
@@ -217,7 +224,6 @@ const handleSubmit = async (e) => {
     setLoading(false);
   }
 };
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -442,11 +448,89 @@ const handleSubmit = async (e) => {
                 />
                 {errors.venue_name && <p className="mt-1 text-sm text-red-600">{errors.venue_name[0]}</p>}
               </div>
+{/* Online / Offline Selection */}
+<div className="bg-white rounded-lg shadow-sm p-6">
+  <h2 className="text-lg font-semibold text-gray-900 mb-6">Event Type</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="flex items-center gap-6">
+    <label className="flex items-center">
+      <input
+        type="radio"
+        name="eventType"
+        value="online"
+        checked={formData.eventType === "online"}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            eventType: e.target.value,
+            location: null,
+            latitude: null,
+            longitude: null,
+          }))
+        }
+        className="mr-2"
+      />
+      Online
+    </label>
+
+    <label className="flex items-center">
+      <input
+        type="radio"
+        name="eventType"
+        value="offline"
+        checked={formData.eventType === "offline"}
+        onChange={(e) =>
+          setFormData((prev) => ({
+            ...prev,
+            eventType: e.target.value,
+          }))
+        }
+        className="mr-2"
+      />
+      Offline
+    </label>
+  </div>
+</div>
+
+{/* Location with Map — only show if offline */}
+{formData.eventType === "offline" && (
+  <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+      <MapPin className="h-5 w-5 mr-2" />
+      Location
+    </h2>
+
+    <div className="grid grid-cols-1 gap-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Select Location on Map *
+        </label>
+
+        <MapPicker
+          onSelect={({ lat, lng, address }) => {
+            setFormData((prev) => ({
+              ...prev,
+              latitude: lat,
+              longitude: lng,
+              location: address, // save formatted address
+            }));
+          }}
+        />
+
+        {formData.location && (
+          <p className="mt-2 text-sm text-gray-600">
+            📍 Selected: <strong>{formData.location}</strong>
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+             {/*<div className="grid grid-cols-1 md:grid-cols-2 gap-6 displayn" >
                 <div>
                   <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
-                    City *
+                    location *
                   </label>
                   <input
                     type="text"
@@ -475,8 +559,8 @@ const handleSubmit = async (e) => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Full street address"
                   />
-                </div>
-              </div>
+                </div> 
+              </div>*/}
             </div>
           </div>
 
@@ -720,3 +804,4 @@ const handleSubmit = async (e) => {
 }
 
 export default CreateEvent
+

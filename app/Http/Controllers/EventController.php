@@ -7,7 +7,7 @@ use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use MongoDB\BSON\ObjectId;
+use Carbon\Carbon;
 
 class EventController extends Controller
 {
@@ -23,13 +23,15 @@ public function store(Request $request)
         'end_time'    => 'required',
         'venue_name'  => 'nullable|string',
         'location'    => 'nullable|string',
-        'address'     => 'nullable|string',
         'capacity'    => 'nullable|integer',
         'tags'        => 'nullable|string', // JSON
         'agenda'      => 'nullable|string', // JSON
         'speakers'    => 'nullable|string', // JSON
         'tickets'     => 'nullable|string', // JSON
         'status'      => 'nullable|string',
+        'featured_image' => 'nullable|image|max:2048', // max 2MB
+        'longitude'   => 'nullable|numeric',
+        'latitude'    => 'nullable|numeric',
     ]);
 
     if ($validator->fails()) {
@@ -76,6 +78,8 @@ public function store(Request $request)
             'speakers'       => $speakers,
             'tags'           => $tags,
             'organizer_id'   => $organizer->_id, // ✅ from JWT, not request
+            'longitude'=> $request->longitude,
+            'latitude'=>$request->latitude,
         ]);
 
         // ✅ Create tickets linked to this event and organizer
@@ -91,6 +95,7 @@ public function store(Request $request)
                 'sale_end_date'   => $ticket['sale_end_date'] ?? null,
                 'is_free'         => $ticket['is_free'] ?? false,
                 'sold'            => 0,
+                
             ]);
         }
 
@@ -199,6 +204,87 @@ public function showOrganizerEvent($id)
     return response()->json([
         'success' => true,
         'data' => $event,
+    ]);
+}
+//    public function upcomingNearest(Request $request)
+//     {
+//         $query = Event::query();
+
+//         // Only upcoming events
+//         $query->whereDate('start_date', '>=', Carbon::today());
+
+//         // Optional: filter by user coordinates if provided
+//         if ($request->has(['lat', 'lng'])) {
+//             $lat = $request->lat;
+//             $lng = $request->lng;
+//             // Simple Haversine formula for distance in km
+//             $query->selectRaw(
+//                 "*, (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance",
+//                 [$lat, $lng, $lat]
+//             )
+//             ->orderBy('distance', 'asc');
+//         } else {
+//             $query->orderBy('start_date', 'asc');
+//         }
+
+//         // Limit results for frontend
+//         $events = $query->take(10)->get([
+//             'id',
+//             'title',
+//             'featured_image',
+//             'location',
+//             'venue_name',
+//             'start_date',
+//             'end_date',
+//             'start_time',
+//             'end_time',
+//             'category_id',
+//             'price',
+//             'is_free',
+//             'booked_count',
+//             'capacity'
+//         ]);
+
+//         // Include category name if you want
+//         $events->load('category:id,name');
+
+//         return response()->json([
+//             'success' => true,
+//             'data' => $events
+//         ]);
+//     }
+public function upcomingNearest(Request $request)
+{
+    $limit = $request->get('limit', 3); // default to 3
+
+    $events = Event::whereDate('start_date', '>=', Carbon::today())
+        ->orderBy('start_date', 'asc')
+        ->take($limit)
+        ->get([
+            '_id',
+            'title',
+            'featured_image',
+            'location',
+            'venue_name',
+            'start_date',
+            'end_date',
+            'start_time',
+            'end_time',
+            'category_id',
+            'price',
+            'is_free',
+            'booked_count',
+            'capacity',
+            
+            
+        ]);
+
+    // Include category info
+    $events->load('category:id,name');
+
+    return response()->json([
+        'success' => true,
+        'events' => $events
     ]);
 }
 
