@@ -51,6 +51,7 @@ class Event extends Model
     protected $primaryKey = '_id';
 
     protected $fillable = [
+
         'title',
         'description',
         'category_id',
@@ -72,6 +73,7 @@ class Event extends Model
         'is_free',
         'price',
         'booked_count',
+        'event_type',
     ];
 
     protected $casts = [

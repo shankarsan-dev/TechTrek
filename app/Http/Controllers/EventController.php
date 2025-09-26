@@ -32,6 +32,7 @@ public function store(Request $request)
         'featured_image' => 'nullable|image|max:2048', // max 2MB
         'longitude'   => 'nullable|numeric',
         'latitude'    => 'nullable|numeric',
+        'event_type' => 'nullable|string',
     ]);
 
     if ($validator->fails()) {
@@ -80,6 +81,7 @@ public function store(Request $request)
             'organizer_id'   => $organizer->_id, // ✅ from JWT, not request
             'longitude'=> $request->longitude,
             'latitude'=>$request->latitude,
+            'event_type' => $request->event_type,
         ]);
 
         // ✅ Create tickets linked to this event and organizer

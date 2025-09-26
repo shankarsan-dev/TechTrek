@@ -35,6 +35,7 @@ const CreateEvent = () => {
     status: "draft",
     tags: [],
     organizer_id: user?.id || null,
+    is_offline: true, // "online" or "offline"
     
   })
   const [agenda, setAgenda] = useState([])
@@ -149,8 +150,15 @@ const CreateEvent = () => {
     if (!formData.start_time) newErrors.start_time = ["Start time is required"]
     if (!formData.end_date) newErrors.end_date = ["End date is required"]
     if (!formData.end_time) newErrors.end_time = ["End time is required"]
-    if (!formData.venue_name) newErrors.venue_name = ["Venue name is required"]
-    if (!formData.location) newErrors.location = ["Location is required"]
+    if (formData.event_type === "offline") {
+  if (!formData.venue_name) {
+    newErrors.venue_name = ["Venue name is required"];
+  }
+  if (!formData.latitude || !formData.longitude) {
+    newErrors.location = ["Please select a location on the map"];
+  }
+}
+
     if (!formData.featured_image) newErrors.featured_image = ["Featured image is required"]
     
     if (ticketData.length === 0 && !formData.is_free) {
@@ -182,7 +190,7 @@ const handleSubmit = async (e) => {
     submitData.append("venue_name", formData.venue_name || "");
     submitData.append("location", formData.location || "");
     //submitData.append("address", formData.address || "");
-    
+    submitData.append("event_type", formData.event_type || "offline");
     submitData.append("status", formData.status || "draft");
 submitData.append("latitude", formData.latitude || "");
 submitData.append("longitude", formData.longitude || "");
@@ -456,13 +464,13 @@ submitData.append("longitude", formData.longitude || "");
     <label className="flex items-center">
       <input
         type="radio"
-        name="eventType"
+        name="event_type"
         value="online"
-        checked={formData.eventType === "online"}
+        checked={formData.event_type === "online"}
         onChange={(e) =>
           setFormData((prev) => ({
             ...prev,
-            eventType: e.target.value,
+            event_type: e.target.value,
             location: null,
             latitude: null,
             longitude: null,
@@ -476,13 +484,13 @@ submitData.append("longitude", formData.longitude || "");
     <label className="flex items-center">
       <input
         type="radio"
-        name="eventType"
+        name="event_type"
         value="offline"
-        checked={formData.eventType === "offline"}
+        checked={formData.event_type === "offline"}
         onChange={(e) =>
           setFormData((prev) => ({
             ...prev,
-            eventType: e.target.value,
+            event_type: e.target.value,
           }))
         }
         className="mr-2"
@@ -493,7 +501,7 @@ submitData.append("longitude", formData.longitude || "");
 </div>
 
 {/* Location with Map — only show if offline */}
-{formData.eventType === "offline" && (
+{formData.event_type === "offline" && (
   <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
     <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
       <MapPin className="h-5 w-5 mr-2" />
@@ -804,4 +812,3 @@ submitData.append("longitude", formData.longitude || "");
 }
 
 export default CreateEvent
-
