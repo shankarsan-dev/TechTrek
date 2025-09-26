@@ -1,8 +1,10 @@
 "use client"
 
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, MapPin, Star, Users } from "lucide-react"
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, MapPin, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import NearestEventsSection from "../components/Events/NearestEventsSection";
+
 
 // Simple UI Components
 const Card = ({ className = "", children, ...props }) => (
@@ -107,41 +109,41 @@ const banners = [
 ]
 
 // Sample events data
-const nearbyEvents = [
-  {
-    id: "1",
-    title: "AI & Machine Learning Summit",
-    date: "Dec 15, 2024",
-    location: "San Francisco, CA",
-    distance: "2.5 miles",
-    attendees: 500,
-    price: "$299",
-    category: "AI/ML",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "2",
-    title: "React Developer Meetup",
-    date: "Dec 18, 2024",
-    location: "Palo Alto, CA",
-    distance: "5.2 miles",
-    attendees: 150,
-    price: "Free",
-    category: "Web Dev",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "3",
-    title: "Startup Pitch Night",
-    date: "Dec 20, 2024",
-    location: "Mountain View, CA",
-    distance: "8.1 miles",
-    attendees: 200,
-    price: "$25",
-    category: "Startup",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-]
+// const nearbyEvents = [
+//   {
+//     id: "1",
+//     title: "AI & Machine Learning Summit",
+//     date: "Dec 15, 2024",
+//     location: "San Francisco, CA",
+//     distance: "2.5 miles",
+//     attendees: 500,
+//     price: "$299",
+//     category: "AI/ML",
+//     image: "/placeholder.svg?height=200&width=300",
+//   },
+//   {
+//     id: "2",
+//     title: "React Developer Meetup",
+//     date: "Dec 18, 2024",
+//     location: "Palo Alto, CA",
+//     distance: "5.2 miles",
+//     attendees: 150,
+//     price: "Free",
+//     category: "Web Dev",
+//     image: "/placeholder.svg?height=200&width=300",
+//   },
+//   {
+//     id: "3",
+//     title: "Startup Pitch Night",
+//     date: "Dec 20, 2024",
+//     location: "Mountain View, CA",
+//     distance: "8.1 miles",
+//     attendees: 200,
+//     price: "$25",
+//     category: "Startup",
+//     image: "/placeholder.svg?height=200&width=300",
+//   },
+// ]
 
 const recommendedEvents = [
   {
@@ -195,7 +197,9 @@ const categories = [
 
 export default function Home() {
   const [currentBanner, setCurrentBanner] = useState(0)
-
+ // const { location, loading, error } = useLocation();
+   const [nearestEvents, setNearestEvents] = useState([]);
+  console.log("User location:", location);
   // Auto-rotate banners
   useEffect(() => {
     const timer = setInterval(() => {
@@ -211,6 +215,38 @@ export default function Home() {
   const prevBanner = () => {
     setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length)
   }
+// useEffect(() => {
+//     if (navigator.geolocation) {
+//       navigator.geolocation.getCurrentPosition(
+//         async (position) => {
+//           const { latitude, longitude } = position.coords;
+//           const events = await eventService.getNearestEvents(latitude, longitude, 3);
+//           setNearestEvents(events);
+//         },
+//         (error) => {
+//           console.warn("Geolocation error:", error);
+//           // fallback: maybe load default events
+//           setNearestEvents(nearbyEvents.slice(0, 3));
+//         }
+//       );
+//     } else {
+//       console.warn("Geolocation not supported");
+//       setNearestEvents(nearbyEvents.slice(0, 3));
+//     }
+//   }, []);
+
+  // useEffect(() => {
+  //   if (!loading && location.latitude && location.longitude) {
+  //     // Pass the coordinates to the API
+  //     eventService
+  //       .getNearestEvents(location.latitude, location.longitude, 3)
+  //       .then((events) => setNearestEvents(events))
+  //       .catch((err) => console.error(err));
+  //   }
+  // }, [loading, location]);
+
+  // if (loading) return <div>Loading location...</div>;
+  // if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -292,7 +328,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Events Near You */}
+      {/* Events Near You
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
@@ -343,7 +379,12 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
+{/* Events Near You */}
+<section className="py-16 bg-gray-50">
+  <NearestEventsSection />
+
+</section>
 
       {/* Recommended Events */}
       <section className="py-16 bg-white">

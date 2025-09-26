@@ -260,7 +260,7 @@ public function organizerEvents(Request $request)
         } 
         // If tickets are in a separate collection
         else {
-            $event->booked_count = \App\Models\Ticket::where('event_id', $event->_id)
+            $event->booked_count = Ticket::where('event_id', $event->_id)
                 ->where('sold', '>', 0)
                 ->count();
         }
@@ -317,6 +317,94 @@ public function showOrganizerEvent($id)
         'data' => $event,
     ]);
 }
+
+
+// public function nearestEvents(Request $request)
+// {
+//     $lat = (float) $request->get('lat');
+//     $lng = (float) $request->get('lng');
+//     $limit = (int) $request->get('limit', 3);
+
+//     if (!$lat || !$lng) {
+//         return response()->json(['message' => 'Latitude and Longitude are required'], 400);
+//     }
+
+//     // Fetch all events with coordinates
+//     $events = Event::whereNotNull('latitude')
+//         ->whereNotNull('longitude')
+//         ->get();
+
+//     // Add distance to each event
+//     $events = $events->map(function ($event) use ($lat, $lng) {
+//         $event->distance = $this->haversineDistance($lat, $lng, (float) $event->latitude, (float) $event->longitude);
+//         return $event;
+//     });
+
+//     // Sort by distance and take nearest
+//     $nearest = $events->sortBy('distance')->take($limit)->values();
+
+//     return response()->json([
+//         'success' => true,
+//         'events' => $nearest,
+//     ]);
+// }
+public function nearestEvents(Request $request)
+{
+    $lat = (float) $request->get('lat');
+    $lng = (float) $request->get('lng');
+    $limit = (int) $request->get('limit', 3);
+
+    if (!$lat || !$lng) {
+        return response()->json(['message' => 'Latitude and Longitude are required'], 400);
+    }
+
+    // Fetch all events with coordinates
+    $events = Event::whereNotNull('latitude')
+        ->whereNotNull('longitude')
+        ->get();
+
+    // Add distance to each event
+    $events = $events->map(function ($event) use ($lat, $lng) {
+        $event->distance = $this->haversineDistance($lat, $lng, (float) $event->latitude, (float) $event->longitude);
+        return $event;
+    });
+
+    // Sort by distance and take nearest
+    $nearest = $events->sortBy('distance')->take($limit)->values();
+
+    // Map to only needed fields
+    $nearest = $nearest->map(function ($event) {
+        return [
+            'title'      => $event->title,
+            'start_date' => $event->start_date->format('M d, Y'), // format nicely
+            'distance'   => round($event->distance, 2) . ' km',
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'events'  => $nearest,
+    ]);
+}
+
+/**
+ * Haversine formula to calculate distance in km
+ */
+private function haversineDistance($lat1, $lon1, $lat2, $lon2)
+{
+    $earthRadius = 6371; // km
+
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+
+    $a = sin($dLat / 2) * sin($dLat / 2) +
+        cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+        sin($dLon / 2) * sin($dLon / 2);
+
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    return $earthRadius * $c;
+}
+
 //    public function upcomingNearest(Request $request)
 //     {
 //         $query = Event::query();

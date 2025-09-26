@@ -1,12 +1,9 @@
 <?php
-
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\CategoryController;
-
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -16,13 +13,13 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/upcoming-nearest', [EventController::class, 'upcomingNearest']);
+Route::get('/events/nearest', [EventController::class, 'nearestEvents']);
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (JWT Auth)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:api')->group(function () {
-
     // Logout for all authenticated users
     Route::post('/logout', [LoginController::class, 'logout']);
     // User-specific routes
@@ -39,6 +36,7 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/organizer/events/{slug}', [EventController::class, 'destroy']);
 
 });
+
 Route::middleware('auth:api')->get('/test-user', function (Request $request) {
     $user = auth()->user(); // fetch user from JWT
     return response()->json([

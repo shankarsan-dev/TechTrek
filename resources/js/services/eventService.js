@@ -1,6 +1,18 @@
 import api from "./api";
 
 export const eventService = {
+
+  // getNearestEvents: async (limit = 3) => {
+  //   const response = await api.get(`/events/nearest?limit=${limit});`);
+  //   return response.data.events; // adjust according to backend response  
+  // },
+
+   getNearestEvents: async (latitude, longitude, limit = 3) => {
+    const response = await api.get("/events/nearest", {
+      params: { lat: latitude, lng: longitude, limit },
+    });
+    return response.data.events; // adjust according to backend
+  },
   getEvents: async (params) => {
     const response = await api.get("/events", { params });
     return response.data;
