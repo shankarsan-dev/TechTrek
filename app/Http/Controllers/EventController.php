@@ -11,6 +11,109 @@ use Carbon\Carbon;
 
 class EventController extends Controller
 {
+// public function store(Request $request)
+// {
+//     $validator = Validator::make($request->all(), [
+//         'title'       => 'required|string|max:255',
+//         'description' => 'required|string',
+//         'category_id' => 'required|string',
+//         'start_date'  => 'required|date',
+//         'end_date'    => 'required|date',
+//         'start_time'  => 'required',
+//         'end_time'    => 'required',
+//         'venue_name'  => 'nullable|string',
+//         'location'    => 'nullable|string',
+//         'capacity'    => 'nullable|integer',
+//         'tags'        => 'nullable|string', // JSON
+//         'agenda'      => 'nullable|string', // JSON
+//         'speakers'    => 'nullable|string', // JSON
+//         'tickets'     => 'nullable|string', // JSON
+//         'status'      => 'nullable|string',
+//         'featured_image' => 'nullable|image|max:2048', // max 2MB
+//         'longitude'   => 'nullable|numeric',
+//         'latitude'    => 'nullable|numeric',
+//         'event_type' => 'nullable|string',
+//     ]);
+
+//     if ($validator->fails()) {
+//         return response()->json(['errors' => $validator->errors()], 422);
+//     }
+
+//     try {
+//         // ✅ get organizer from authenticated user
+//         $organizer = auth()->user();
+
+//         if (!$organizer) {
+//             return response()->json(['message' => 'Unauthorized'], 401);
+//         }
+
+//         // Featured image
+//         $imageUrl = null;
+//         if ($request->hasFile('featured_image')) {
+//             $imagePath = $request->file('featured_image')->store('events', 'public');
+//             $imageUrl = Storage::disk('public')->url($imagePath);
+//         }
+
+//         // Decode JSON arrays
+//         $agenda   = json_decode($request->agenda ?? '[]', true);
+//         $speakers = json_decode($request->speakers ?? '[]', true);
+//         $tags     = json_decode($request->tags ?? '[]', true);
+//         $tickets  = json_decode($request->tickets ?? '[]', true);
+
+//         // ✅ Create event with authenticated organizer_id
+//         $event = Event::create([
+//             'title'          => $request->title,
+//             'description'    => $request->description,
+//             'category_id'    => $request->category_id,
+//             'start_date'     => $request->start_date,
+//             'end_date'       => $request->end_date,
+//             'start_time'     => $request->start_time,
+//             'end_time'       => $request->end_time,
+//             'venue_name'     => $request->venue_name,
+//             'location'       => $request->location,
+//             'address'        => $request->address,
+//             'capacity'       => $request->capacity,
+//             'status'         => $request->status,
+//             'featured_image' => $imageUrl,
+//             'agenda'         => $agenda,
+//             'speakers'       => $speakers,
+//             'tags'           => $tags,
+//             'organizer_id'   => $organizer->_id, // ✅ from JWT, not request
+//             'longitude'=> $request->longitude,
+//             'latitude'=>$request->latitude,
+//             'event_type' => $request->event_type,
+//         ]);
+
+//         // ✅ Create tickets linked to this event and organizer
+//         foreach ($tickets as $ticket) {
+//             Ticket::create([
+//                 'event_id'        => $event->_id,
+//                 'organizer_id'    => $organizer->_id,
+//                 'type'            => $ticket['name'] ?? 'General',
+//                 'price'           => $ticket['price'] ?? 0,
+//                 'quantity'        => $ticket['capacity'] ?? 0,
+//                 'description'     => $ticket['description'] ?? '',
+//                 'sale_start_date' => $ticket['sale_start_date'] ?? null,
+//                 'sale_end_date'   => $ticket['sale_end_date'] ?? null,
+//                 'is_free'         => $ticket['is_free'] ?? false,
+//                 'sold'            => 0,
+                
+//             ]);
+//         }
+
+//         return response()->json([
+//             'message' => 'Event created successfully',
+//             'data'    => $event,
+//             'id'      => (string) $event->_id,
+//         ], 201);
+
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'message' => 'Error creating event',
+//             'error'   => $e->getMessage(),
+//         ], 500);
+//     }
+// }
 public function store(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -24,15 +127,15 @@ public function store(Request $request)
         'venue_name'  => 'nullable|string',
         'location'    => 'nullable|string',
         'capacity'    => 'nullable|integer',
-        'tags'        => 'nullable|string', // JSON
-        'agenda'      => 'nullable|string', // JSON
-        'speakers'    => 'nullable|string', // JSON
+        'tags'        => 'nullable|string',
+        'agenda'      => 'nullable|string',
+        'speakers'    => 'nullable|string',
         'tickets'     => 'nullable|string', // JSON
         'status'      => 'nullable|string',
-        'featured_image' => 'nullable|image|max:2048', // max 2MB
+        'featured_image' => 'nullable|image|max:2048',
         'longitude'   => 'nullable|numeric',
         'latitude'    => 'nullable|numeric',
-        'event_type' => 'nullable|string',
+        'event_type'  => 'nullable|string',
     ]);
 
     if ($validator->fails()) {
@@ -40,12 +143,8 @@ public function store(Request $request)
     }
 
     try {
-        // ✅ get organizer from authenticated user
         $organizer = auth()->user();
-
-        if (!$organizer) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
+        if (!$organizer) return response()->json(['message' => 'Unauthorized'], 401);
 
         // Featured image
         $imageUrl = null;
@@ -60,7 +159,7 @@ public function store(Request $request)
         $tags     = json_decode($request->tags ?? '[]', true);
         $tickets  = json_decode($request->tickets ?? '[]', true);
 
-        // ✅ Create event with authenticated organizer_id
+        // Step 1: Create event without is_free
         $event = Event::create([
             'title'          => $request->title,
             'description'    => $request->description,
@@ -78,15 +177,17 @@ public function store(Request $request)
             'agenda'         => $agenda,
             'speakers'       => $speakers,
             'tags'           => $tags,
-            'organizer_id'   => $organizer->_id, // ✅ from JWT, not request
-            'longitude'=> $request->longitude,
-            'latitude'=>$request->latitude,
-            'event_type' => $request->event_type,
+            'organizer_id'   => $organizer->_id,
+            'longitude'      => $request->longitude,
+            'latitude'       => $request->latitude,
+            'event_type'     => $request->event_type,
+            'is_free'        => false, // default, will update below
         ]);
 
-        // ✅ Create tickets linked to this event and organizer
+        // Step 2: Create tickets and check if any is free
+        $isFree = false;
         foreach ($tickets as $ticket) {
-            Ticket::create([
+            $ticketData = Ticket::create([
                 'event_id'        => $event->_id,
                 'organizer_id'    => $organizer->_id,
                 'type'            => $ticket['name'] ?? 'General',
@@ -95,10 +196,18 @@ public function store(Request $request)
                 'description'     => $ticket['description'] ?? '',
                 'sale_start_date' => $ticket['sale_start_date'] ?? null,
                 'sale_end_date'   => $ticket['sale_end_date'] ?? null,
-                'is_free'         => $ticket['is_free'] ?? false,
+                'is_free'         => $ticket['price'] == 0 || ($ticket['is_free'] ?? false),
                 'sold'            => 0,
-                
             ]);
+
+            if ($ticketData->is_free) {
+                $isFree = true;
+            }
+        }
+
+        // Step 3: Update event's is_free if at least one ticket is free
+        if ($isFree) {
+            $event->update(['is_free' => true]);
         }
 
         return response()->json([

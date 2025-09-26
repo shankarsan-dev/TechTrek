@@ -439,23 +439,7 @@ submitData.append("longitude", formData.longitude || "");
             </h2>
 
             <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label htmlFor="venue_name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Venue Name *
-                </label>
-                <input
-                  type="text"
-                  id="venue_name"
-                  name="venue_name"
-                  value={formData.venue_name}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                    errors.venue_name ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="e.g., Tech Conference Center"
-                />
-                {errors.venue_name && <p className="mt-1 text-sm text-red-600">{errors.venue_name[0]}</p>}
-              </div>
+            
 {/* Online / Offline Selection */}
 <div className="bg-white rounded-lg shadow-sm p-6">
   <h2 className="text-lg font-semibold text-gray-900 mb-6">Event Type</h2>
@@ -502,11 +486,9 @@ submitData.append("longitude", formData.longitude || "");
 
 {/* Location with Map — only show if offline */}
 {formData.event_type === "offline" && (
+  
   <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
-    <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-      <MapPin className="h-5 w-5 mr-2" />
-      Location
-    </h2>
+   
 
     <div className="grid grid-cols-1 gap-6">
       <div>
@@ -532,46 +514,28 @@ submitData.append("longitude", formData.longitude || "");
         )}
       </div>
     </div>
+
+       <div>
+                <label htmlFor="venue_name" className="block text-md font-medium text-gray-700 mb-2">
+                  Venue Name *
+                </label>
+                <input
+                  type="text"
+                  id="venue_name"
+                  name="venue_name"
+                  value={formData.venue_name}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                    errors.venue_name ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="e.g., Tech Conference Center"
+                />
+                {errors.venue_name && <p className="mt-1 text-sm text-red-600">{errors.venue_name[0]}</p>}
+              </div>
   </div>
 )}
-
-             {/*<div className="grid grid-cols-1 md:grid-cols-2 gap-6 displayn" >
-                <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
-                    location *
-                  </label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                      errors.location ? "border-red-300" : "border-gray-300"
-                    }`}
-                    placeholder="e.g., San Francisco, CA"
-                  />
-                  {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location[0]}</p>}
-                </div>
-
-                <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Address
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Full street address"
-                  />
-                </div> 
-              </div>*/}
             </div>
           </div>
-
           {/* Tickets */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Tickets</h2>
