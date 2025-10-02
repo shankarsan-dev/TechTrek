@@ -24,7 +24,7 @@ export const eventService = {
     return response.data; // returns { success, data }
   } catch (error) {
     throw new Error(
-      error.response?.data?.message ||
+      error.response?.data?.message ||  
         error.response?.data?.error ||
         error.message ||
         "Failed to fetch event details"
