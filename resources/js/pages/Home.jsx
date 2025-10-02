@@ -4,6 +4,7 @@ import { ArrowRight, Calendar, ChevronLeft, ChevronRight, MapPin, Star } from "l
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NearestEventsSection from "../components/Events/NearestEventsSection";
+import UpcomingEventsSection from "../components/Events/UpcomingEventsSection";
 
 
 // Simple UI Components
@@ -144,6 +145,43 @@ const banners = [
 //     image: "/placeholder.svg?height=200&width=300",
 //   },
 // ]
+// Sample upcoming events data
+const upcomingEvents = [
+  {
+    id: "7",
+    title: "AI in Healthcare Conference",
+    date: "Mar 12, 2025",
+    location: "Boston, MA",
+    rating: 4.6,
+    attendees: 300,
+    price: "$399",
+    category: "AI/Healthcare",
+    image: "/placeholder.svg?height=200&width=300",
+  },
+  {
+    id: "8",
+    title: "Frontend Masters Workshop",
+    date: "Mar 25, 2025",
+    location: "New York, NY",
+    rating: 4.8,
+    attendees: 120,
+    price: "$199",
+    category: "Web Dev",
+    image: "/placeholder.svg?height=200&width=300",
+  },
+  {
+    id: "9",
+    title: "Global Tech Expo",
+    date: "Apr 3, 2025",
+    location: "Las Vegas, NV",
+    rating: 4.9,
+    attendees: 2000,
+    price: "$799",
+    category: "Expo",
+    image: "/placeholder.svg?height=200&width=300",
+  },
+]
+
 
 const recommendedEvents = [
   {
@@ -215,38 +253,6 @@ export default function Home() {
   const prevBanner = () => {
     setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length)
   }
-// useEffect(() => {
-//     if (navigator.geolocation) {
-//       navigator.geolocation.getCurrentPosition(
-//         async (position) => {
-//           const { latitude, longitude } = position.coords;
-//           const events = await eventService.getNearestEvents(latitude, longitude, 3);
-//           setNearestEvents(events);
-//         },
-//         (error) => {
-//           console.warn("Geolocation error:", error);
-//           // fallback: maybe load default events
-//           setNearestEvents(nearbyEvents.slice(0, 3));
-//         }
-//       );
-//     } else {
-//       console.warn("Geolocation not supported");
-//       setNearestEvents(nearbyEvents.slice(0, 3));
-//     }
-//   }, []);
-
-  // useEffect(() => {
-  //   if (!loading && location.latitude && location.longitude) {
-  //     // Pass the coordinates to the API
-  //     eventService
-  //       .getNearestEvents(location.latitude, location.longitude, 3)
-  //       .then((events) => setNearestEvents(events))
-  //       .catch((err) => console.error(err));
-  //   }
-  // }, [loading, location]);
-
-  // if (loading) return <div>Loading location...</div>;
-  // if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -327,63 +333,13 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Events Near You
+      {/*Upcoming Events */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Events Near You</h2>
-              <p className="text-gray-600">Discover tech events happening in your area</p>
-            </div>
-            <Link to="/events-near-you">
-              <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-                View All <ArrowRight size={16} />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {nearbyEvents.map((event) => (
-              <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                <img
-                  src={event.image || "/placeholder.svg"}
-                  alt={event.title}
-                  className="w-full h-48 object-cover rounded-t-lg"
-                />
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <Badge variant="secondary">{event.category}</Badge>
-                    <span className="text-lg font-bold text-green-600">{event.price}</span>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
-                  <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} />
-                      {event.date}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin size={14} />
-                      {event.location} • {event.distance}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users size={14} />
-                      {event.attendees} attendees
-                    </div>
-                  </div>
-                  <Link to={`/events/${event.id}`}>
-                    <Button className="w-full">View Details</Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section> */}
+  <UpcomingEventsSection />
+</section>
 {/* Events Near You */}
 <section className="py-16 bg-gray-50">
   <NearestEventsSection />
-
 </section>
 
       {/* Recommended Events */}
@@ -432,6 +388,7 @@ export default function Home() {
                       {event.rating} • {event.attendees} attendees
                     </div>
                   </div>
+                  event.id
                   <Link to={`/events/${event.id}`}>
                     <Button className="w-full">View Details</Button>
                   </Link>

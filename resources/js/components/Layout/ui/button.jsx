@@ -1,4 +1,4 @@
-import { cn } from "../../lib/utils"
+import { cn } from "../../../lib/utils"
 
 const Button = ({ children, className, variant = "default", size = "default", ...props }) => {
   const baseStyles =

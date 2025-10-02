@@ -12,8 +12,9 @@ use App\Http\Controllers\CategoryController;
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/upcoming-nearest', [EventController::class, 'upcomingNearest']);
+Route::get('/events/upcoming', [EventController::class, 'upcomingEvents']);
 Route::get('/events/nearest', [EventController::class, 'nearestEvents']);
+Route::get('/events/{id}', [EventController::class, 'showEvent']);
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (JWT Auth)
@@ -24,9 +25,9 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
     // User-specific routes
         Route::get('/events', [EventController::class, 'index']);
-        Route::get('/events/{slug}', [EventController::class, 'show']);
+        //Route::get('/events/{slug}', [EventController::class, 'show']);
         Route::get('/events/{slug}/recommend', [EventController::class, 'recommend']);
-
+      
     // Organizer-specific routes
 
         Route::post('/events', [EventController::class, 'store']);

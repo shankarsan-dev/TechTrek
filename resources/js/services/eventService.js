@@ -2,10 +2,10 @@ import api from "./api";
 
 export const eventService = {
 
-  // getNearestEvents: async (limit = 3) => {
-  //   const response = await api.get(`/events/nearest?limit=${limit});`);
-  //   return response.data.events; // adjust according to backend response  
-  // },
+  getUpcomingEvents: async (limit = 1) => {
+    const { data } = await api.get(`/events/upcoming?limit=${limit}`);
+    return Array.isArray(data.events) ? data.events : []; // always return an array
+  },
 
    getNearestEvents: async (latitude, longitude, limit = 3) => {
     const response = await api.get("/events/nearest", {
@@ -13,11 +13,23 @@ export const eventService = {
     });
     return response.data.events; // adjust according to backend
   },
-  getEvents: async (params) => {
-    const response = await api.get("/events", { params });
-    return response.data;
-  },
-
+  // getEvents: async (params) => {
+  //   const response = await api.get("/events", { params });
+  //   return response.data;
+  // },
+  getEvent: async (id) => {
+  try {
+    const response = await api.get(`/events/${id}`);
+    console.log("Fetched event details:", response.data);
+    return response.data; // returns { success, data }
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to fetch event details"
+    );
+  }},
   getEvent: async (id) => {
     const response = await api.get(`/events/${id}`);
     return response.data;
