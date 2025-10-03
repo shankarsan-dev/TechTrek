@@ -1,13 +1,22 @@
-import api from "./api";
+  import api from "./api";
 
-export const bookingService = {
-  createBooking: async (eventId, quantity) => {
-    const response = await api.post("/bookings", { event_id: eventId, quantity });
+  export const bookingService = {
+     createBooking: async ({ event_id, ticket_id, user_id, quantity = 1 }) => {
+    const response = await api.post("/bookings", {
+      event_id,
+      ticket_id,
+      user_id,
+      quantity,
+    });
     return response.data;
   },
+    getUserBookings: async () => {
+      const response = await api.get("/bookings");
+      return response.data;
+    },
 
-  getUserBookings: async () => {
-    const response = await api.get("/bookings");
+ cancelBooking: async (bookingId) => {
+    const response = await api.put(`/bookings/${bookingId}/cancel`);
     return response.data;
   },
-};
+  };

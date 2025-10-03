@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\BookingController;
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -15,6 +17,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/events/upcoming', [EventController::class, 'upcomingEvents']);
 Route::get('/events/nearest', [EventController::class, 'nearestEvents']);
 Route::get('/events/{id}', [EventController::class, 'showEvent']);
+
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (JWT Auth)
@@ -46,3 +49,13 @@ Route::middleware('auth:api')->get('/test-user', function (Request $request) {
     ]);
 });
 
+
+
+
+Route::get('/bookings', [BookingController::class, 'index']); // List bookings for authenticated user
+Route::post('/bookings', [BookingController::class, 'store']); // Create a booking
+Route::put('/bookings/{id}/cancel', [BookingController::class, 'cancelBooking']); // Cancel a booking
+
+
+Route::post('/pay/{ticket}', [PaymentController::class, 'pay']); // API endpoint to start payment
+Route::post('/verify', [PaymentController::class, 'verify'])->name('api.payment.verify'); // Verification callback
