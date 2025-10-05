@@ -17,23 +17,24 @@ export const eventService = {
   //   const response = await api.get("/events", { params });
   //   return response.data;
   // },
-  getEvent: async (id) => {
-  try {
-    const response = await api.get(`/events/${id}`);
-    console.log("Fetched event details:", response.data);
-    return response.data; // returns { success, data }
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||  
+ getEvent: async (id) => {
+    try {
+      const response = await api.get(`/events/${id}`);
+      console.log("Fetched event details:", response.data);
+      return response.data.data; // ✅ unwrap actual event object
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message ||
         error.response?.data?.error ||
         error.message ||
         "Failed to fetch event details"
-    );
-  }},
-  getEvent: async (id) => {
-    const response = await api.get(`/events/${id}`);
-    return response.data;
+      );
+    }
   },
+  // getEvent: async (id) => {
+  //   const response = await api.get(`/events/${id}`);
+  //   return response.data;
+  // },
 
   createEvent: async (formData) => {
     const response = await api.post("/events", formData);

@@ -166,7 +166,7 @@ public function organizerEvents(Request $request)
 
         // Load category manually (MongoDB does not support Eloquent relations fully)
         if (isset($event->category_id)) {
-            $event->category = \App\Models\Category::find($event->category_id);
+            $event->category = Category::find($event->category_id);
         }
 
         return $event;

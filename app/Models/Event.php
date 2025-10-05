@@ -85,6 +85,7 @@ class Event extends Model
         'start_date' => 'date',
         'end_date'   => 'date',
     ];
+    
 
     // Add this relationship if tickets are in a separate collection
     public function tickets(): HasMany

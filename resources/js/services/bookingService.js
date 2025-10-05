@@ -11,8 +11,8 @@
     return response.data;
   },
     getUserBookings: async () => {
-      const response = await api.get("/bookings");
-      return response.data;
+      const response = await api.get("/user-bookings");
+      return response.data.bookings;
     },
 
  cancelBooking: async (bookingId) => {

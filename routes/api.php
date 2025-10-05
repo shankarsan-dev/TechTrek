@@ -59,3 +59,6 @@ Route::put('/bookings/{id}/cancel', [BookingController::class, 'cancelBooking'])
 
 Route::post('/pay/{ticket}', [PaymentController::class, 'pay']); // API endpoint to start payment
 Route::post('/verify', [PaymentController::class, 'verify'])->name('api.payment.verify'); // Verification callback
+
+Route::get('/user-bookings', [BookingController::class, 'getUserBookings']);
+

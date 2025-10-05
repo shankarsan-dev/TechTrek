@@ -51,4 +51,13 @@ class Booking extends Model
         'checked_in' => 'boolean',
         'status' => 'string',
     ];
+
+    function event()
+    {
+        return $this->belongsTo(Event::class, 'event_id', '_id');
+    }
+     function Ticket()
+    {
+        return $this->belongsTo(Ticket::class, 'ticket_id', '_id');
+    }
 }

@@ -20,4 +20,10 @@ class Ticket extends Model
         'is_free',
         'sold',
     ];
+    
+    function event()
+    {
+        return $this->belongsTo(Event::class, 'event_id', '_id');
+    }
+   
 }
