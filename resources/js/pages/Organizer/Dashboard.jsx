@@ -5,7 +5,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
-
+import QrScanner from "./QrScanner"
 // You can keep your dashboard content as-is, but remove any outer layout padding like min-h-screen or px-*
 const OrganizerDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("30")
@@ -33,6 +33,7 @@ const OrganizerDashboard = () => {
             <Plus className="h-4 w-4 mr-2" />
             Create Event
           </Link>
+          <QrScanner />
         </div>
       </div>
 

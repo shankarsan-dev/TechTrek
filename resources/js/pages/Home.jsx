@@ -109,43 +109,6 @@ const banners = [
   },
 ]
 
-// Sample events data
-// const nearbyEvents = [
-//   {
-//     id: "1",
-//     title: "AI & Machine Learning Summit",
-//     date: "Dec 15, 2024",
-//     location: "San Francisco, CA",
-//     distance: "2.5 miles",
-//     attendees: 500,
-//     price: "$299",
-//     category: "AI/ML",
-//     image: "/placeholder.svg?height=200&width=300",
-//   },
-//   {
-//     id: "2",
-//     title: "React Developer Meetup",
-//     date: "Dec 18, 2024",
-//     location: "Palo Alto, CA",
-//     distance: "5.2 miles",
-//     attendees: 150,
-//     price: "Free",
-//     category: "Web Dev",
-//     image: "/placeholder.svg?height=200&width=300",
-//   },
-//   {
-//     id: "3",
-//     title: "Startup Pitch Night",
-//     date: "Dec 20, 2024",
-//     location: "Mountain View, CA",
-//     distance: "8.1 miles",
-//     attendees: 200,
-//     price: "$25",
-//     category: "Startup",
-//     image: "/placeholder.svg?height=200&width=300",
-//   },
-// ]
-// Sample upcoming events data
 const upcomingEvents = [
   {
     id: "7",

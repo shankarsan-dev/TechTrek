@@ -141,11 +141,8 @@ const Header = () => {
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
-              <Link
-                to="/events"
-                className="text-gray-700 hover:text-primary-600 font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
+              <Link to="/events" className="text-gray-700 hover:text-primary-600 font-medium"
+onClick={() => setIsMenuOpen(false)}>
                 Events
               </Link>
               <Link

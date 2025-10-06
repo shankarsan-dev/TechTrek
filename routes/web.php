@@ -15,5 +15,5 @@ Route::get('/{any}', function () {
 })->where('any', '.*');
 
 
-Route::get('/pay/{ticket}', [PaymentController::class, 'pay']);
-Route::post('/esewa/verify', [PaymentController::class, 'verify'])->name('esewa.verify');
+// Route::get('/pay/{ticket}', [PaymentController::class, 'pay']);
+// Route::post('/esewa/verify', [PaymentController::class, 'verify'])->name('esewa.verify');

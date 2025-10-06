@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Download, Mail, CheckCircle, Clock, XCircle, MoreVertical, Users, Calendar } from "lucide-react"
-
+import { Calendar, CheckCircle, Clock, Download, Mail, MoreVertical, Search, Users, XCircle } from "lucide-react";
+import { useState } from "react";
+import QrScanner from "./QrScanner";
 const OrganizerAttendees = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -278,7 +278,7 @@ const OrganizerAttendees = () => {
               </div>
             </div>
           </div>
-
+          <QrScanner /> 
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
