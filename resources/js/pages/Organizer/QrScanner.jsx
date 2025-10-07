@@ -785,7 +785,7 @@ const QrScanner = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:8000/api/verify-qr-code", {
+      const res = await axios.post("http://localhost:8000/api/check-in", {
         qr_code: scanResult.booking.qr_code,
       });
 
