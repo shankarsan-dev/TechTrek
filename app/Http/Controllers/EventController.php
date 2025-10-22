@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use App\Models\Event;
 use App\Models\Ticket;
 use App\Models\Category;
@@ -9,9 +7,28 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
-
 class EventController extends Controller
 {
+public function index(Request $request)
+{
+    $query = Event::query();
+    // Filter by category
+    if ($request->has('category') && $request->category !== 'all') {
+        $query->where('category_id', $request->category);
+       
+    }
+    // Filter by search term (title or description)
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
+    }
+    $events = $query->get();
+
+    return response()->json($events);
+}
 
 public function store(Request $request)
 {
@@ -31,7 +48,7 @@ public function store(Request $request)
         'speakers'    => 'nullable|string',
         'tickets'     => 'nullable|string', // JSON
         'status'      => 'nullable|string',
-        'featured_image' => 'nullable|image|max:2048',
+        // 'featured_image' => 'nullable|image|max:2048',
         'longitude'   => 'nullable|numeric',
         'latitude'    => 'nullable|numeric',
         'event_type'  => 'nullable|string',
@@ -82,7 +99,6 @@ public function store(Request $request)
             'event_type'     => $request->event_type,
             'is_free'        => false, // default, will update below
         ]);
-
         // Step 2: Create tickets and check if any is free
         $isFree = false;
         foreach ($tickets as $ticket) {
@@ -122,8 +138,6 @@ public function store(Request $request)
         ], 500);
     }
 }
-
-
 public function organizerEvents(Request $request)
 {
     $organizer = auth()->user(); // JWT-authenticated organizer
@@ -216,41 +230,6 @@ public function showOrganizerEvent($id)
     ]);
 }
 
-// public function showEvent($id)
-// {
-//     // Fetch event by slug and organizer
-//     $event = Event::where('_id', $id)
-//         ->first();
-
-//     if (!$event) {
-//         return response()->json([
-//             'message' => 'Event not found',
-//         ], 404);
-//     }
-
-//     // Attach category info
-//     if (isset($event->category_id)) {
-//         $event->category = Category::find($event->category_id);
-//     }
-
-//     // Attach tickets info
-//     if (isset($event->tickets)) {
-//         $event->booked_count = collect($event->tickets)
-//             ->where('sold', '>', 0)
-//             ->count();
-//     } else {
-//         $tickets = Ticket::where('event_id', $event->_id)->get();
-//         $event->tickets = $tickets;
-//         $event->booked_count = $tickets->where('sold', '>', 0)->count();
-//     }
-
-//     return response()->json([
-//         'success' => true,
-//         'data' => $event,
-//     ]);
-// }
-
-
 public function showEvent($id)
 {
     // Fetch event with category and tickets
@@ -301,23 +280,37 @@ public function showEvent($id)
         'data'    => $responseData,
     ]);
 }
-
-public function nearestEvents(Request $request) {
+public function nearestEvents(Request $request)
+{
     $lat = (float) $request->get('lat');
     $lng = (float) $request->get('lng');
     $limit = (int) $request->get('limit', 3);
+    $maxDistance = (float) $request->get('max_distance'); // required from frontend
+    $categoryId = $request->get('category'); // optional
 
+    // Basic validation
     if (!$lat || !$lng) {
         return response()->json(['message' => 'Latitude and Longitude are required'], 400);
     }
+    if (!$maxDistance) {
+        return response()->json(['message' => 'max_distance is required'], 400);
+    }
 
-    // Fetch all events with coordinates and only upcoming events
-    $events = Event::whereNotNull('latitude')
+    // Base query: upcoming events with coordinates
+    $query = Event::whereNotNull('latitude')
         ->whereNotNull('longitude')
-        ->whereDate('start_date', '>=', now()) // ✅ upcoming events only
-        ->get();
+        ->whereDate('start_date', '>=', now())
+        ->with('category:id,name');
 
-    // Add distance to each event
+    // Filter by category if provided and not 'all'
+    if ($categoryId && $categoryId !== 'all') {
+        $query->where('category_id', $categoryId);
+    }
+
+    $events = $query->get();
+
+
+    // Compute distance and filter by max distance from frontend
     $events = $events->map(function ($event) use ($lat, $lng) {
         $event->distance = $this->haversineDistance(
             $lat,
@@ -326,21 +319,39 @@ public function nearestEvents(Request $request) {
             (float) $event->longitude
         );
         return $event;
+    })->filter(function ($event) use ($maxDistance) {
+        return $event->distance <= $maxDistance;
     });
 
-    // Sort by distance and take nearest
+    // Sort by distance and limit
     $nearest = $events->sortBy('distance')->take($limit)->values();
 
-    // Map to only needed fields
+    // Format the response
     $nearest = $nearest->map(function ($event) {
         return [
-            'title'      => $event->title,
-            'start_date' => $event->start_date->format('M d, Y'),
-            'distance'   => round($event->distance, 2) . ' km',
+            'id'             => (string) $event->_id,
+            'title'          => $event->title,
+            'description'    => $event->description,
+            'location'       => $event->location,
+            'venue_name'     => $event->venue_name,
+            'slug'           => $event->slug,
+            'start_date'     => $event->start_date->format('M d, Y'),
+            'end_date'       => $event->end_date->format('M d, Y'),
+            'distance'       => round($event->distance, 2) . ' km',
             'featured_image' => $event->featured_image,
-            'id'         => (string) $event->_id,
+            'category_id'    => $event->category_id,
+            'category_name'  => $event->category->name ?? 'Uncategorized',
         ];
     });
+
+    // Handle case: no nearby events found
+    if ($nearest->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => "No events found within {$maxDistance} km",
+            'events'  => [],
+        ]);
+    }
 
     return response()->json([
         'success' => true,

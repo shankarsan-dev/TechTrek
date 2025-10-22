@@ -45,19 +45,15 @@ export const AuthProvider = ({ children }) => {
   const login = async ({ email, password, role, organizationName }) => {
     setLoading(true);
     setError(null);
-
     try {
       // Send only strings, not DOM elements
       const payload = { email, password };
       if (role === "organizer") {
         payload.organizationName = organizationName;
       }
-
       const response = await authService.login(payload);
-
       // Set user in context
       setUser(response.user);
-
       return response; // contains user + token
     } catch (err) {
       setError(err.message || "Failed to login");
@@ -66,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
+  
 const register = async (userData) => {
   setLoading(true);
   setError(null);

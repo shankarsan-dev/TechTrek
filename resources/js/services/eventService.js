@@ -7,16 +7,37 @@ export const eventService = {
     return Array.isArray(data.events) ? data.events : []; // always return an array
   },
 
-   getNearestEvents: async (latitude, longitude, limit = 3) => {
-    const response = await api.get("/events/nearest", {
-      params: { lat: latitude, lng: longitude, limit },
-    });
-    return response.data.events; // adjust according to backend
-  },
-  // getEvents: async (params) => {
-  //   const response = await api.get("/events", { params });
-  //   return response.data;
+  //  getNearestEvents: async (latitude, longitude, limit = 3) => {
+  //   const response = await api.get("/events/nearest", {
+  //     params: { lat: latitude, lng: longitude, limit },
+  //   });
+  //   return response.data.events; // adjust according to backend
   // },
+ getNearestEvents: async (latitude, longitude, maxDistance = 100, limit = 6, category = "all") => {
+  const response = await api.get("/events/nearest", {
+    params: {
+      lat: latitude,
+      lng: longitude,
+      max_distance: maxDistance,
+      limit,
+      category, // 👈 include category here
+    },
+  });
+  return response.data.events;
+},
+
+  // getEvents: async (category = "all", search = "") => {
+  //   const res = await api.get("/events", {
+  //     params: { category, search },
+  //   })
+  //   return res.data
+  // },
+  getEvents: async (category = "all", search = "") => {
+    const response = await api.get("/events", {
+      params: { category, search },
+    })
+    return response.data
+  },
  getEvent: async (id) => {
     try {
       const response = await api.get(`/events/${id}`);

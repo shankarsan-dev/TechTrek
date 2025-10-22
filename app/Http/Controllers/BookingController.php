@@ -34,7 +34,7 @@ public function getUserBookings(Request $request)
             $ticketPrice = $booking->ticket->price ?? 0;
             $quantity    = $booking->quantity ?? 1;
             $totalPrice  = $ticketPrice * $quantity;
-
+            $userId = $booking->user_id;
             return [
                 'id'          => $booking->id,
                 'eventName'   => $booking->event->title ?? 'Unknown Event',
@@ -48,6 +48,7 @@ public function getUserBookings(Request $request)
                 'totalPrice'  =>  number_format($totalPrice, 2),
                 'qr_code'         => $booking->qr_code,
                 'event_id'    => $booking->event_id,
+                'user_id'     => $userId,
             ];
         });
 
@@ -155,42 +156,7 @@ public function cancelBooking(Request $request, $id)
         ],
     ]);
 }
-// public function checkInBooking(Request $request)
-// {
-//     $request->validate([
-//         'qr_code' => 'required|string',
-//     ]);
 
-//     // Find the booking
-//     $booking = Booking::where('qr_code', $request->qr_code)
-//                       ->where('status', 'active')
-//                       ->first();
-
-//     if (!$booking) {
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Booking not found or inactive.',
-//         ], 404);
-//     }
-
-//     // Check if already checked-in
-//     if ($booking->status=="checked_in") {
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Ticket already checked in.',
-//         ], 400);
-//     }
-
-//     // Update booking as checked-in
-//     $booking->status = "checked_in";
-//     $booking->save();
-
-//     return response()->json([
-//         'success' => true,
-//         'message' => 'Booking successfully checked in.',
-//         'booking' => $booking,
-//     ]);
-// }
 public function checkInBooking(Request $request)
 {
     $request->validate([

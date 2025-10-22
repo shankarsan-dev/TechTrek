@@ -1,13 +1,13 @@
 "use client"
 
+import { Blocks, Cloud, Code, Cpu, Database, Search, Settings, Shield, Smartphone } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Search, Code, Smartphone, Database, Shield, Cloud, Cpu, Blocks, Settings } from "lucide-react"
 
 // Tech categories with icons and data
 const techCategories = [
   {
-    id: "ai",
+    id: "ai-ml",
     name: "AI & Machine Learning",
     description: "Artificial Intelligence, Machine Learning, Deep Learning, Neural Networks",
     icon: Cpu,
@@ -19,7 +19,7 @@ const techCategories = [
     ],
   },
   {
-    id: "web",
+    id: "web-dev",
     name: "Web Development",
     description: "React, Next.js, Vue, Angular, Full-stack Development",
     icon: Code,
@@ -31,7 +31,7 @@ const techCategories = [
     ],
   },
   {
-    id: "mobile",
+    id: "mobile-dev",
     name: "Mobile Development",
     description: "Flutter, React Native, iOS, Android Development",
     icon: Smartphone,
@@ -43,7 +43,7 @@ const techCategories = [
     ],
   },
   {
-    id: "data",
+    id: "data-science",
     name: "Data Science & Analytics",
     description: "Python, R, Data Analysis, Visualization, Big Data",
     icon: Database,
@@ -55,7 +55,7 @@ const techCategories = [
     ],
   },
   {
-    id: "security",
+    id: "cyber-security",
     name: "Cybersecurity",
     description: "Ethical Hacking, Penetration Testing, Security Protocols",
     icon: Shield,
@@ -67,7 +67,7 @@ const techCategories = [
     ],
   },
   {
-    id: "cloud",
+    id: "cloud-computing",
     name: "Cloud Computing",
     description: "AWS, Azure, Google Cloud, Docker, Kubernetes",
     icon: Cloud,
@@ -79,7 +79,7 @@ const techCategories = [
     ],
   },
   {
-    id: "blockchain",
+    id: "blockchain-web3",
     name: "Blockchain & Web3",
     description: "Smart Contracts, DeFi, NFTs, Cryptocurrency",
     icon: Blocks,

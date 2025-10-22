@@ -338,7 +338,7 @@ export default function NearestEventsSection() {
           {nearestEvents.map((event) => (
             <Card key={event.id} className="hover:shadow-lg transition-shadow">
               <img
-                src={event.image || "/placeholder.svg"}
+                src={event.featured_image || "/placeholder.svg"}
                 alt={event.title}
                 className="w-full h-48 object-cover rounded-t-lg"
               />

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom"
 import Layout from "./components/Layout/Layout"
 import { AuthProvider } from "./contexts/AuthContext"
+import AdminLogin from "./pages/Auth/AdminLogin"
 import ForgotPassword from "./pages/Auth/ForgotPassword"
 import Login from "./pages/Auth/Login"
 import Register from "./pages/Auth/Register"
@@ -55,7 +56,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
-
+              <Route path="/admin-login" element={<AdminLogin />} />
               {/* Public Routes */}
               < Route path="create-events"element={<CreateEventWizard></CreateEventWizard>}/>
               <Route path="/" element={<Layout />}>
@@ -115,6 +116,7 @@ function App() {
               >
                 <Route index element={<AdminDashboard />} />
                 <Route path="organizer-verification" element={<OrganizerVerification />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="users" element={<div>User Management Page</div>} />
                 <Route path="events" element={<div>Event Monitoring Page</div>} />
                 <Route path="analytics" element={<div>Admin Analytics Page</div>} />

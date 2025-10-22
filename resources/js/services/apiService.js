@@ -193,7 +193,7 @@ createEvent: async (formData) => {
   getEvents: async (params) => {
     const response = await api.get("/events", { params });
     return response.data;
-  },
+  },    
 
   getEvent: async (id) => {
     const response = await api.get(`/events/${id}`);

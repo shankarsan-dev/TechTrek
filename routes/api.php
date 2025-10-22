@@ -19,27 +19,31 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/events/upcoming', [EventController::class, 'upcomingEvents']);
 Route::get('/events/nearest', [EventController::class, 'nearestEvents']);
 Route::get('/events/{id}', [EventController::class, 'showEvent']);
+ Route::get('/events', [EventController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (JWT Auth)
 |--------------------------------------------------------------------------
 */
-
 //Route::post('/verify-qr-code', [BookingController::class, 'verifyQrCode']);
 Route::middleware('auth:api')->group(function () {
 
     // Logout for all authenticated users
     Route::post('/logout', [LoginController::class, 'logout']);
     // User-specific routes
-        Route::get('/events', [EventController::class, 'index']);
+   
         //Route::get('/events/{slug}', [EventController::class, 'show']);
-        Route::get('/events/{slug}/recommend', [EventController::class, 'recommend']);
+
+
+        Route::get('/user-bookings', [BookingController::class, 'getUserBookings']);
+        // Route::get('/events/{slug}/recommend', [EventController::class, 'recommend']);
     // Organizer-specific routes
 
         Route::post('/events', [EventController::class, 'store']);
         Route::get('/organizer/events', [EventController::class, 'organizerEvents']); Route::get('/organizer/events/{id}', [EventController::class, 'showOrganizerEvent']);
         Route::put('/organizer/events/{slug}', [EventController::class, 'update']);
         Route::delete('/organizer/events/{slug}', [EventController::class, 'destroy']);
+        
 
 
 
@@ -65,5 +69,5 @@ Route::middleware('auth:api')->get('/test-user', function (Request $request) {
 
 Route::post('/pay/{ticket}', [PaymentController::class, 'pay']); // API endpoint to start payment
 Route::post('/verify', [PaymentController::class, 'verify'])->name('api.payment.verify'); // Verification callback
-Route::get('/user-bookings', [BookingController::class, 'getUserBookings']);
+
 

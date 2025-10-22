@@ -186,14 +186,14 @@ const recommendedEvents = [
 ]
 
 const categories = [
-  { name: "Artificial Intelligence", count: 45, icon: "🤖", color: "bg-blue-100 text-blue-800" },
-  { name: "Web Development", count: 67, icon: "💻", color: "bg-green-100 text-green-800" },
-  { name: "Mobile Development", count: 32, icon: "📱", color: "bg-purple-100 text-purple-800" },
-  { name: "Data Science", count: 28, icon: "📊", color: "bg-orange-100 text-orange-800" },
-  { name: "Cybersecurity", count: 19, icon: "🔒", color: "bg-red-100 text-red-800" },
-  { name: "Cloud Computing", count: 41, icon: "☁️", color: "bg-cyan-100 text-cyan-800" },
-  { name: "Blockchain", count: 23, icon: "⛓️", color: "bg-yellow-100 text-yellow-800" },
-  { name: "IoT", count: 15, icon: "🌐", color: "bg-indigo-100 text-indigo-800" },
+  { name: "Artificial Intelligence", count: 45, icon: "🤖", color: "bg-blue-100 text-blue-800", id:"ai-ml"},
+  { name: "Web Development", count: 67, icon: "💻", color: "bg-green-100 text-green-800", id:"web-dev" },
+  { name: "Mobile Development", count: 32, icon: "📱", color: "bg-purple-100 text-purple-800", id:"mobile-dev" },
+  { name: "Data Science", count: 28, icon: "📊", color: "bg-orange-100 text-orange-800", id:"data-science" },
+  { name: "Cybersecurity", count: 19, icon: "🔒", color: "bg-red-100 text-red-800", id:"cyber-security" },
+  { name: "Cloud Computing", count: 41, icon: "☁️", color: "bg-cyan-100 text-cyan-800", id:"cloud-computing" },
+  { name: "Blockchain", count: 23, icon: "⛓️", color: "bg-yellow-100 text-yellow-800", id:"blockchain-web3" },
+  { name: "Dev Ops", count: 15, icon: "🌐", color: "bg-indigo-100 text-indigo-800", id:"dev-ops" },
 ]
 
 export default function Home() {
@@ -351,7 +351,7 @@ export default function Home() {
                       {event.rating} • {event.attendees} attendees
                     </div>
                   </div>
-                  event.id
+             
                   <Link to={`/events/${event.id}`}>
                     <Button className="w-full">View Details</Button>
                   </Link>
@@ -374,7 +374,7 @@ export default function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {categories.map((category) => (
-              <Link key={category.name} to={`/events?category=${encodeURIComponent(category.name)}`}>
+              <Link key={category.id} to={`/events?category=${encodeURIComponent(category.id)}`}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                   <CardContent className="p-6 text-center">
                     <div className="text-4xl mb-4">{category.icon}</div>
