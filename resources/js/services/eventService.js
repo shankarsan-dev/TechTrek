@@ -2,10 +2,10 @@ import api from "./api";
 
 export const eventService = {
 
-  getUpcomingEvents: async (limit = 1) => {
-    const { data } = await api.get(`/events/upcoming?limit=${limit}`);
-    return Array.isArray(data.events) ? data.events : []; // always return an array
-  },
+  // getUpcomingEvents: async (limit = 1) => {
+  //   const { data } = await api.get(`/events/upcoming?limit=${limit}`);
+  //   return Array.isArray(data.events) ? data.events : []; // always return an array
+  // },
 
   //  getNearestEvents: async (latitude, longitude, limit = 3) => {
   //   const response = await api.get("/events/nearest", {
@@ -13,30 +13,60 @@ export const eventService = {
   //   });
   //   return response.data.events; // adjust according to backend
   // },
- getNearestEvents: async (latitude, longitude, maxDistance = 100, limit = 6, category = "all") => {
-  const response = await api.get("/events/nearest", {
-    params: {
-      lat: latitude,
-      lng: longitude,
-      max_distance: maxDistance,
-      limit,
-      category, // 👈 include category here
-    },
-  });
-  return response.data.events;
-},
-
+//  getNearestEvents: async (latitude, longitude, maxDistance = 100, limit = 6, category = "all") => {
+//   const response = await api.get("/events/nearest", {
+//     params: {
+//       lat: latitude,
+//       lng: longitude,
+//       max_distance: maxDistance,
+//       limit,
+//       category, // 👈 include category here
+//     },
+//   });
+//   return response.data.events;
+// },
+getNearestEvents: async (latitude, longitude, maxDistance = 50, limit = 6, category = "all") => {
+    const response = await api.get("/events/nearest", {
+      params: {
+        lat: latitude,
+        lng: longitude,
+        max_distance: maxDistance, // matches backend param
+        limit,
+        category, // category ID or 'all'
+      },
+    });
+    return response.data.events; // directly return events array
+  },
   // getEvents: async (category = "all", search = "") => {
   //   const res = await api.get("/events", {
   //     params: { category, search },
   //   })
   //   return res.data
   // },
-  getEvents: async (category = "all", search = "") => {
-    const response = await api.get("/events", {
-      params: { category, search },
-    })
-    return response.data
+  // getEvents: async (category = "all", search = "") => {
+  //   const response = await api.get("/events", {
+  //     params: { category, search },
+  //   })
+  //   return response.data
+  // },
+  getEvents: async (filters = {}) => {
+    const params = new URLSearchParams()
+
+    if (filters.category_id && filters.category_id !== "all") {
+      params.append("category", filters.category_id)
+    }
+    if (filters.search) {
+      params.append("search", filters.search)
+    }
+    if (filters.filter && filters.filter !== "all") {
+      params.append("filter", filters.filter)
+    }
+    if (filters.limit) {
+      params.append("limit", filters.limit)
+    }
+
+    const res = await api.get(`/events`, { params })
+    return res.data.events || res.data // adjust according to backend response
   },
  getEvent: async (id) => {
     try {
@@ -106,8 +136,8 @@ export const eventService = {
         "Failed to fetch event details"
     );
   }
-},getUpcomingNearestEvents: async (limit = 3) => {
-  const response = await api.get(`/events/upcoming-nearest?limit=${limit}`);
+},getUpcomingEvents: async (filter="all",limit="10") => {
+  const response = await api.get(`/events/upcoming?filter=${filter}&limit=${limit}`);
   return response.data.events; // adjust according to backend response
 }
 

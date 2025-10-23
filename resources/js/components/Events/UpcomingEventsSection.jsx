@@ -238,9 +238,18 @@ export default function UpcomingEventsSection() {
   };
 
   useEffect(() => {
+
     const fetchUpcomingEvents = async () => {
+
+
       try {
-        const events = await eventService.getUpcomingEvents(3); // ✅ already returns event array
+        const filters = {
+          category_id: "all",
+          search:"",
+          filter:"all",
+          limit: 3,
+        }
+        const events = await eventService.getEvents(filters); // ✅ already returns event array
         setUpcomingEvents(events || []);
       } catch (error) {
         console.error("Error fetching upcoming events:", error);
@@ -319,7 +328,7 @@ export default function UpcomingEventsSection() {
               Stay ahead — here are the next big events you shouldn’t miss
             </p>
           </div>
-          <Link to="/upcoming-events">
+          <Link to="/events?filter=year">
             <Button variant="outline" className="flex items-center gap-2 bg-transparent">
               View All <ArrowRight size={16} />
             </Button>
@@ -346,10 +355,19 @@ export default function UpcomingEventsSection() {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                       <Calendar size={14} />
                       {event.start_date}
-                    </div>
+                    </div> */}
+                   < div className="flex items-center gap-2">
+  <Calendar size={14} />
+  {new Date(event.start_date).toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })}
+</div>
                     <div className="flex items-center gap-2">
                       <MapPin size={14} />
                       {street}, {city}

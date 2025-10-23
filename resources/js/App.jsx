@@ -41,6 +41,7 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute"
 import "../css/app.css"
 import Home from "./pages/Home"
 import HomeRedirect from "./pages/HomeRedirect"
+import UpcomingEvents from "./pages/UpcomingEvents"
 
 const queryClient = new QueryClient()
 
@@ -64,6 +65,7 @@ function App() {
                  <Route  path ="home" element={<Home />} />
                 <Route path="events" element={<Events />} />
                 <Route path="events-near-you" element={<EventsNearYou />} />
+                    <Route path="upcoming-events" element={<UpcomingEvents />} />
                 <Route path="recommended-events" element={<RecommendedEvents />} />
                 <Route path="events/:id" element={<EventDetails />} />
                 <Route path="categories" element={<Categories />} />

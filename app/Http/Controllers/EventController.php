@@ -9,25 +9,90 @@ use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 class EventController extends Controller
 {
+// public function index(Request $request)
+// {
+//     $query = Event::query();
+//     // Filter by category
+//     if ($request->has('category') && $request->category !== 'all') {
+//         $query->where('category_id', $request->category);
+       
+//     }
+//     // Filter by search term (title or description)
+//     if ($request->has('search') && !empty($request->search)) {
+//         $search = $request->search;
+//         $query->where(function ($q) use ($search) {
+//             $q->where('title', 'like', "%{$search}%")
+//               ->orWhere('description', 'like', "%{$search}%");
+//         });
+//     }
+//     $events = $query->get();
+
+//     return response()->json($events);
+// }
 public function index(Request $request)
 {
-    $query = Event::query();
-    // Filter by category
-    if ($request->has('category') && $request->category !== 'all') {
-        $query->where('category_id', $request->category);
-       
+    $limit = $request->get('limit', 10); // default 10
+    $category = $request->get('category'); // optional
+    $search = $request->get('search'); // optional
+    $filter = $request->get('filter', 'all'); // week, month, year, all
+
+    $query = Event::whereDate('start_date', '>=', Carbon::today());
+
+    // Apply category filter
+    if ($category && $category !== 'all') {
+        $query->where('category_id', $category);
     }
-    // Filter by search term (title or description)
-    if ($request->has('search') && !empty($request->search)) {
-        $search = $request->search;
+
+    // Apply search filter
+    if ($search && !empty($search)) {
         $query->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
               ->orWhere('description', 'like', "%{$search}%");
         });
     }
-    $events = $query->get();
 
-    return response()->json($events);
+    // Apply date filter
+    switch ($filter) {
+        case 'week':
+            $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfWeek()]);
+            break;
+        case 'month':
+            $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfMonth()]);
+            break;
+        case 'year':
+            $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfYear()]);
+            break;
+        case 'all':
+        default:
+            // just future events, no extra filter
+            break;
+    }
+
+    // Fetch events with category relation
+    $events = $query->with('category:id,name')
+        ->orderBy('start_date', 'asc')
+        ->take($limit)
+        ->get([
+            '_id',
+            'title',
+            'featured_image',
+            'location',
+            'venue_name',
+            'start_date',
+            'end_date',
+            'start_time',
+            'end_time',
+            'category_id',
+            'price',
+            'is_free',
+            'capacity',
+        ]);
+
+    return response()->json([
+        'success' => true,
+        'filter'  => $filter,
+        'events'  => $events,
+    ]);
 }
 
 public function store(Request $request)
@@ -378,11 +443,142 @@ private function haversineDistance($lat1, $lon1, $lat2, $lon2)
     return $earthRadius * $c;
 }
 
+// public function upcomingEvents(Request $request)
+// {
+//     $limit = $request->get('limit',3); // default to 3
+
+//     $events = Event::whereDate('start_date', '>=', Carbon::today())
+//         ->orderBy('start_date', 'asc')
+//         ->take($limit)
+//         ->get([
+//             '_id',
+//             'title',
+//             'featured_image',
+//             'location',
+//             'venue_name',
+//             'start_date',
+//             'end_date',
+//             'start_time',
+//             'end_time',
+//             'category_id',
+//             'price',
+//             'is_free',
+//             'booked_count',
+//             'capacity',
+//         ]);
+
+//     // Load category relation
+//     $events->load('category:id,name');
+
+//     return response()->json([
+//         'success' => true,
+//         'events' => $events,
+//     ]);
+// }
+
+// public function upcomingEvents(Request $request)
+// {
+//     $limit = $request->get('limit', 3);
+//     $filter = $request->get('filter', 'all'); // default: all time
+
+//     // Start building the query
+//     $query = Event::whereDate('start_date', '>=', Carbon::today());
+
+//     // Apply filter based on the period
+//     switch ($filter) {
+//         case 'week':
+//             $query->whereBetween('start_date', [
+//                 Carbon::today(),
+//                 Carbon::today()->endOfWeek()
+//             ]);
+//             break;
+
+//         case 'month':
+//             $query->whereBetween('start_date', [
+//                 Carbon::today(),
+//                 Carbon::today()->endOfMonth()
+//             ]);
+//             break;
+
+//         case 'year':
+//             $query->whereBetween('start_date', [
+//                 Carbon::today(),
+//                 Carbon::today()->endOfYear()
+//             ]);
+//             break;
+
+//         case 'all':
+//         default:
+//             // no extra condition — just future events
+//             break;
+//     }
+
+//     // Fetch data
+//     $events = $query->orderBy('start_date', 'asc')
+//         ->take($limit)
+//         ->get([
+//             '_id',
+//             'title',
+//             'featured_image',
+//             'location',
+//             'venue_name',
+//             'start_date',
+//             'end_date',
+//             'start_time',
+//             'end_time',
+//             'category_id',
+//             'price',
+//             'is_free',
+//             'booked_count',
+//             'capacity',
+//         ]);
+
+//     // Load category relation
+//     $events->load('category:id,name');
+
+//     return response()->json([
+//         'success' => true,
+//         'filter' => $filter,
+//         'events' => $events,
+//     ]);
+// }
+
 public function upcomingEvents(Request $request)
 {
-    $limit = $request->get('limit',3); // default to 3
+    $limit = $request->get('limit', 3);
+    $filter = $request->get('filter', 'all'); // possible: week, month, year, all
 
-    $events = Event::whereDate('start_date', '>=', Carbon::today())
+    $query = Event::whereDate('start_date', '>=', Carbon::today());
+
+    switch ($filter) {
+        case 'week':
+            $query->whereBetween('start_date', [
+                Carbon::today(),
+                Carbon::today()->endOfWeek(),
+            ]);
+            break;
+
+        case 'month':
+            $query->whereBetween('start_date', [
+                Carbon::today(),
+                Carbon::today()->endOfMonth(),
+            ]);
+            break;
+
+        case 'year':
+            $query->whereBetween('start_date', [
+                Carbon::today(),
+                Carbon::today()->endOfYear(),
+            ]);
+            break;
+
+        case 'all':
+        default:
+            // no extra date restriction, just future events
+            break;
+    }
+
+    $events = $query
         ->orderBy('start_date', 'asc')
         ->take($limit)
         ->get([
@@ -402,13 +598,13 @@ public function upcomingEvents(Request $request)
             'capacity',
         ]);
 
-    // Load category relation
     $events->load('category:id,name');
 
     return response()->json([
         'success' => true,
+        'filter' => $filter,
         'events' => $events,
     ]);
 }
 
-}
+ }

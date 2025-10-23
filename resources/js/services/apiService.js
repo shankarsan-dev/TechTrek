@@ -204,7 +204,6 @@ createEvent: async (formData) => {
         const response = await api.get("/categories");
         // alert(response.data);
         return response.data;
-        
       },
 
   // Bookings
