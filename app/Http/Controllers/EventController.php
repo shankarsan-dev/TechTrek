@@ -7,51 +7,191 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use App\Models\UserPreference;
+ use MongoDB\BSON\Regex;
+
 class EventController extends Controller
 {
 // public function index(Request $request)
 // {
-//     $query = Event::query();
-//     // Filter by category
-//     if ($request->has('category') && $request->category !== 'all') {
-//         $query->where('category_id', $request->category);
-       
+//     $limit = $request->get('limit', 10); // default 10
+//     $category = $request->get('category'); // optional
+//     $search = $request->get('search'); // optional
+//     $filter = $request->get('filter', 'all'); // week, month, year, all
+
+//     $query = Event::whereDate('start_date', '>=', Carbon::today());
+
+//     // Apply category filter
+//     if ($category && $category !== 'all') {
+//         $query->where('category_id', $category);
 //     }
-//     // Filter by search term (title or description)
-//     if ($request->has('search') && !empty($request->search)) {
-//         $search = $request->search;
+
+//     // Apply search filter
+//     if ($search && !empty($search)) {
 //         $query->where(function ($q) use ($search) {
 //             $q->where('title', 'like', "%{$search}%")
-//               ->orWhere('description', 'like', "%{$search}%");
+//               ->orWhere('description', 'like', "%{$search}%")->orWhere('venue_name', 'like', "%{$search}%")->orWhere('location', 'like', "%{$search}%");
 //         });
 //     }
-//     $events = $query->get();
 
-//     return response()->json($events);
+//     // Apply date filter
+//     switch ($filter) {
+//         case 'week':
+//             $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfWeek()]);
+//             break;
+//         case 'month':
+//             $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfMonth()]);
+//             break;
+//         case 'year':
+//             $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfYear()]);
+//             break;
+//         case 'all':
+//         default:
+//             // just future events, no extra filter
+//             break;
+//     }
+
+//     // Fetch events with category relation
+//     $events = $query->with('category:id,name')
+//         ->orderBy('start_date', 'asc')
+//         ->take($limit)
+//         ->get([
+//             '_id',
+//             'title',
+//             'featured_image',
+//             'location',
+//             'venue_name',
+//             'start_date',
+//             'end_date',
+//             'start_time',
+//             'end_time',
+//             'category_id',
+//             'price',
+//             'is_free',
+//             'capacity',
+//         ]);
+
+//     return response()->json([
+//         'success' => true,
+//         'filter'  => $filter,
+//         'events'  => $events,
+//     ]);
+//}
+// public function index(Request $request)
+// {
+//     $limit = $request->get('limit', 10);
+//     $category = $request->get('category');
+//     $search = $request->get('search');
+//     $filter = $request->get('filter', 'all');
+//     $tags = $request->get('tags'); // e.g. "react,javascript"
+
+//     $query = Event::where('start_date', '>=', Carbon::today());
+
+//     // Category filter
+//     if ($category && $category !== 'all') {
+//         $query->where('category_id', $category);
+//     }
+
+//     // ✅ Tag filter (?tags=react,javascript)
+//     if ($tags && !empty($tags)) {
+//         $tagArray = array_map('trim', explode(',', $tags));
+//         // Matches if tags array contains *any* of the given values
+//         $query->whereIn('tags', $tagArray);
+//     }
+
+//     // ✅ Search filter (title, description, location, AND tags)
+//     if ($search && !empty($search)) {
+//         $query->where(function ($q) use ($search) {
+//             $regex = new \MongoDB\BSON\Regex($search, 'i'); // case-insensitive
+
+//             $q->where('title', 'like', "%{$search}%")
+//               ->orWhere('description', 'like', "%{$search}%")
+//               ->orWhere('venue_name', 'like', "%{$search}%")
+//               ->orWhere('location', 'like', "%{$search}%")
+//               // Match inside tags array
+//               ->orWhere('tags', $regex);
+//         });
+//     }
+
+//     // Date filter
+//     switch ($filter) {
+//         case 'week':
+//             $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfWeek()]);
+//             break;
+//         case 'month':
+//             $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfMonth()]);
+//             break;
+//         case 'year':
+//             $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfYear()]);
+//             break;
+//         case 'all':
+//         default:
+//             break;
+//     }
+
+//     // Fetch events
+//     $events = $query->with('category:id,name')
+//         ->orderBy('start_date', 'asc')
+//         ->take($limit)
+//         ->get([
+//             '_id',
+//             'title',
+//             'featured_image',
+//             'location',
+//             'venue_name',
+//             'start_date',
+//             'end_date',
+//             'start_time',
+//             'end_time',
+//             'category_id',
+//             'price',
+//             'is_free',
+//             'capacity',
+//             'tags',
+//         ]);
+
+//     return response()->json([
+//         'success' => true,
+//         'filter'  => $filter,
+//         'events'  => $events,
+//     ]);
 // }
+
 public function index(Request $request)
 {
-    $limit = $request->get('limit', 10); // default 10
-    $category = $request->get('category'); // optional
-    $search = $request->get('search'); // optional
-    $filter = $request->get('filter', 'all'); // week, month, year, all
+    $limit = $request->get('limit', 10);
+    $category = $request->get('category');
+    $search = $request->get('search');
+    $filter = $request->get('filter', 'all');
+    $tags = $request->get('tags'); // e.g. "react,javascript"
 
-    $query = Event::whereDate('start_date', '>=', Carbon::today());
+    $query = Event::where('start_date', '>=', Carbon::today());
 
-    // Apply category filter
+    // Category filter
     if ($category && $category !== 'all') {
         $query->where('category_id', $category);
     }
 
-    // Apply search filter
+    // Tag filter
+    if ($tags && !empty($tags)) {
+        $tagArray = array_map('trim', explode(',', $tags));
+        $query->whereIn('tags', $tagArray);
+    }
+
+    // Search filter
     if ($search && !empty($search)) {
         $query->where(function ($q) use ($search) {
+            $regex = Regex($search, 'i'); // case-insensitive
+
             $q->where('title', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhere('venue_name', 'like', "%{$search}%")
+              ->orWhere('location', 'like', "%{$search}%")
+              ->orWhere('tags', $regex);
         });
     }
 
-    // Apply date filter
+    // Date filter
     switch ($filter) {
         case 'week':
             $query->whereBetween('start_date', [Carbon::today(), Carbon::today()->endOfWeek()]);
@@ -64,11 +204,10 @@ public function index(Request $request)
             break;
         case 'all':
         default:
-            // just future events, no extra filter
             break;
     }
 
-    // Fetch events with category relation
+    // Fetch events
     $events = $query->with('category:id,name')
         ->orderBy('start_date', 'asc')
         ->take($limit)
@@ -86,7 +225,10 @@ public function index(Request $request)
             'price',
             'is_free',
             'capacity',
+            'tags',
         ]);
+
+ 
 
     return response()->json([
         'success' => true,
@@ -258,49 +400,98 @@ public function organizerEvents(Request $request)
         'data' => $events,
     ]);
 }
-public function showOrganizerEvent($id)
-{
-    $organizer = auth()->user(); // JWT-authenticated organizer
-    $organizerId = $organizer->_id;
+// public function showOrganizerEvent($id)
+// {
+//     $organizer = auth()->user(); // JWT-authenticated organizer
+//     $organizerId = $organizer->_id;
 
-    // Fetch event by slug and organizer
-    $event = Event::where('organizer_id', $organizerId)
-        ->where('_id', $id)
-        ->first();
+//     // Fetch event by slug and organizer
+//     $event = Event::where('organizer_id', $organizerId)
+//         ->where('_id', $id)
+//         ->first();
 
-    if (!$event) {
-        return response()->json([
-            'message' => 'Event not found',
-        ], 404);
-    }
+//     if (!$event) {
+//         return response()->json([
+//             'message' => 'Event not found',
+//         ], 404);
+//     }
 
-    // Attach category info
-    if (isset($event->category_id)) {
-        $event->category = Category::find($event->category_id);
-    }
-    // Attach tickets info
-    if (isset($event->tickets)) {
-        $event->booked_count = collect($event->tickets)
-            ->where('sold', '>', 0)
-            ->count();
-    } else {
-        $tickets = Ticket::where('event_id', $event->_id)->get();
-        $event->tickets = $tickets;
-        $event->booked_count = $tickets->where('sold', '>', 0)->count();
-    }
+//     // Attach category info
+//     if (isset($event->category_id)) {
+//         $event->category = Category::find($event->category_id);
+//     }
+//     // Attach tickets info
+//     if (isset($event->tickets)) {
+//         $event->booked_count = collect($event->tickets)
+//             ->where('sold', '>', 0)
+//             ->count();
+//     } else {
+//         $tickets = Ticket::where('event_id', $event->_id)->get();
+//         $event->tickets = $tickets;
+//         $event->booked_count = $tickets->where('sold', '>', 0)->count();
+//     }
 
-    return response()->json([
-        'success' => true,
-        'data' => $event,
-    ]);
-}
+//     return response()->json([
+//         'success' => true,
+//         'data' => $event,
+//     ]);
+// }
+
+// public function showEvent($id)
+// {
+//     // Fetch event with category and tickets
+//     $event = Event::with(['category', 'tickets'])
+//         ->where('_id', $id)
+//         ->first();
+
+//     if (!$event) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Event not found',
+//         ], 404);
+//     }
+
+//     // Calculate booked count (sum of sold tickets)
+//     $bookedCount = $event->tickets ? $event->tickets->sum('sold') : 0;
+
+//     // Transform response
+//     $responseData = [
+//         'id'            => $event->_id,
+//         'title'         => $event->title,
+//         'description'   => $event->description,
+//         'category'      => $event->category ? [
+//             'id'   => $event->category->_id ?? $event->category->id,
+//             'name' => $event->category->name,
+//         ] : null,
+//         'start_date'    => $event->start_date,
+//         'end_date'      => $event->end_date,
+//         'start_time'    => $event->start_time,
+//         'end_time'      => $event->end_time,
+//         'venue_name'    => $event->venue_name,
+//         'location'      => $event->location,
+//         'address'       => $event->address,
+//         'capacity'      => $event->capacity,
+//         'featured_image'=> $event->featured_image,
+//         'agenda'        => $event->agenda ?? [],
+//         'speakers'      => $event->speakers ?? [],
+//         'tags'          => $event->tags ?? [],
+//         'tickets'       => $event->tickets ?? [],
+//         'booked_count'  => $bookedCount,
+//         'organizer_id'  => $event->organizer_id,
+//         'created_at'    => $event->created_at,
+//         'updated_at'    => $event->updated_at,
+//     ];
+
+//     return response()->json([
+//         'success' => true,
+//         'data'    => $responseData,
+//     ]);
+// }
+
 
 public function showEvent($id)
 {
-    // Fetch event with category and tickets
-    $event = Event::with(['category', 'tickets'])
-        ->where('_id', $id)
-        ->first();
+    $event = Event::with(['category', 'tickets'])->where('_id', $id)->first();
 
     if (!$event) {
         return response()->json([
@@ -309,35 +500,54 @@ public function showEvent($id)
         ], 404);
     }
 
-    // Calculate booked count (sum of sold tickets)
+    
+// Update user preference with score increment
+if (auth()->check() && !empty($event->tags)) {
+    $userId = auth()->id();
+    $interactionType = 'view';
+
+    foreach ($event->tags as $tag) {
+        $pref = UserPreference::firstOrNew([
+            'user_id' => $userId,
+            'event_id' => $event->_id,
+            'tag' => $tag,
+            'interaction_type' => $interactionType,
+        ]);
+
+        // Increment score
+        $pref->score = ($pref->score ?? 0) + 1;
+        $pref->save();
+    }
+}
+
+
     $bookedCount = $event->tickets ? $event->tickets->sum('sold') : 0;
 
-    // Transform response
     $responseData = [
-        'id'            => $event->_id,
-        'title'         => $event->title,
-        'description'   => $event->description,
-        'category'      => $event->category ? [
+        'id'             => $event->_id,
+        'title'          => $event->title,
+        'description'    => $event->description,
+        'category'       => $event->category ? [
             'id'   => $event->category->_id ?? $event->category->id,
             'name' => $event->category->name,
         ] : null,
-        'start_date'    => $event->start_date,
-        'end_date'      => $event->end_date,
-        'start_time'    => $event->start_time,
-        'end_time'      => $event->end_time,
-        'venue_name'    => $event->venue_name,
-        'location'      => $event->location,
-        'address'       => $event->address,
-        'capacity'      => $event->capacity,
-        'featured_image'=> $event->featured_image,
-        'agenda'        => $event->agenda ?? [],
-        'speakers'      => $event->speakers ?? [],
-        'tags'          => $event->tags ?? [],
-        'tickets'       => $event->tickets ?? [],
-        'booked_count'  => $bookedCount,
-        'organizer_id'  => $event->organizer_id,
-        'created_at'    => $event->created_at,
-        'updated_at'    => $event->updated_at,
+        'start_date'     => $event->start_date,
+        'end_date'       => $event->end_date,
+        'start_time'     => $event->start_time,
+        'end_time'       => $event->end_time,
+        'venue_name'     => $event->venue_name,
+        'location'       => $event->location,
+        'address'        => $event->address,
+        'capacity'       => $event->capacity,
+        'featured_image' => $event->featured_image,
+        'agenda'         => $event->agenda ?? [],
+        'speakers'       => $event->speakers ?? [],
+        'tags'           => $event->tags ?? [],
+        'tickets'        => $event->tickets ?? [],
+        'booked_count'   => $bookedCount,
+        'organizer_id'   => $event->organizer_id,
+        'created_at'     => $event->created_at,
+        'updated_at'     => $event->updated_at,
     ];
 
     return response()->json([
@@ -345,6 +555,7 @@ public function showEvent($id)
         'data'    => $responseData,
     ]);
 }
+
 public function nearestEvents(Request $request)
 {
     $lat = (float) $request->get('lat');
@@ -606,5 +817,61 @@ public function upcomingEvents(Request $request)
         'events' => $events,
     ]);
 }
+
+
+
+    public function recommendedEvents(Request $request)
+    {
+        $user = auth()->user(); // JWT authenticated user
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        // Step 1: Get all user tag scores
+        $tagScores = UserPreference::where('user_id', $user->_id)
+            ->where('interaction_type', 'view') // optional, or include all types
+            ->get()
+            ->groupBy('tag')
+            ->map(function ($items) {
+                return $items->sum('score');
+            });
+
+        if ($tagScores->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data' => [], // no preferences yet
+                'message' => 'No tag preferences found'
+            ]);
+        }
+
+        // Step 2: Fetch events and calculate match score
+        $events = Event::all()->map(function ($event) use ($tagScores) {
+            $eventTags = is_string($event->tags) ? json_decode($event->tags, true) : $event->tags;
+            $eventScore = 0;
+
+            if (is_array($eventTags)) {
+                foreach ($eventTags as $tag) {
+                    $eventScore += $tagScores[$tag] ?? 0;
+                }
+            }
+
+            $event->recommendation_score = $eventScore;
+            return $event;
+        });
+
+        // Step 3: Sort events by score descending
+        $recommendedEvents = $events->sortByDesc('recommendation_score')->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $recommendedEvents
+        ]);
+    }
+
+
 
  }

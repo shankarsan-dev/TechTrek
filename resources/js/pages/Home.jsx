@@ -374,7 +374,7 @@ export default function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {categories.map((category) => (
-              <Link key={category.id} to={`/events?category=${encodeURIComponent(category.id)}`}>
+              <Link key={category.id} to={`/events?category_id=${encodeURIComponent(category.id)}`}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                   <CardContent className="p-6 text-center">
                     <div className="text-4xl mb-4">{category.icon}</div>

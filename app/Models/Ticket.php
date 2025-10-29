@@ -13,7 +13,7 @@ class Ticket extends Model
         'name',              // frontend sends this
         'type',              // optional
         'price',
-        'quantity',          // capacity
+        'quantity',          // capacity 
         'description',
         'sale_start_date',
         'sale_end_date',

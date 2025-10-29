@@ -6,6 +6,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\UserPreferenceController;  
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -19,6 +20,8 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/events/upcoming', [EventController::class, 'upcomingEvents']);
 Route::get('/events/nearest', [EventController::class, 'nearestEvents']);
 Route::get('/events/{id}', [EventController::class, 'showEvent']);
+
+
  Route::get('/events', [EventController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
@@ -29,12 +32,18 @@ Route::get('/events/{id}', [EventController::class, 'showEvent']);
 Route::middleware('auth:api')->group(function () {
 
     // Logout for all authenticated users
+
+    // Route::post('/user-preferences', [UserPreferenceController::class, 'store']);
+    // Route::get('/user-preferences/top-tags', [UserPreferenceController::class, 'topTags']);
+     Route::post('/user/preferences', [UserPreferenceController::class, 'updatePreferences']);
+    Route::get('/user/preferences', [UserPreferenceController::class, 'getUserPreferences']);
+    Route::get('/recommended-events', [EventController::class, 'recommendedEvents']);
+
+
     Route::post('/logout', [LoginController::class, 'logout']);
     // User-specific routes
-   
+
         //Route::get('/events/{slug}', [EventController::class, 'show']);
-
-
         Route::get('/user-bookings', [BookingController::class, 'getUserBookings']);
         // Route::get('/events/{slug}/recommend', [EventController::class, 'recommend']);
     // Organizer-specific routes
