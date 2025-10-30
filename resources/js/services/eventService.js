@@ -37,18 +37,21 @@ getNearestEvents: async (latitude, longitude, maxDistance = 50, limit = 6, categ
     });
     return response.data.events; // directly return events array
   },
-  // getEvents: async (category = "all", search = "") => {
-  //   const res = await api.get("/events", {
-  //     params: { category, search },
-  //   })
-  //   return res.data
+
+  //  getRecommendedEvents: async (category = "all") => {
+  //   const res = await api.get(`recommended-events?category=${category}`);
+  //   return res.data.data || [];
   // },
-  // getEvents: async (category = "all", search = "") => {
-  //   const response = await api.get("/events", {
-  //     params: { category, search },
-  //   })
-  //   return response.data
-  // },
+  getRecommendedEvents: async (filters = {}) => {
+  const query = new URLSearchParams(filters).toString()
+  const res = await api.get(`recommended-events?${query}`)
+  return res.data.data||[];
+},
+  getTopTags: async () => {
+    const res = await api.get("/top-tags");
+    return res.data.data || [];
+  },
+
   getEvents: async (filters = {}) => {
     const params = new URLSearchParams()
 

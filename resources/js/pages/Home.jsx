@@ -1,11 +1,11 @@
 "use client"
 
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, MapPin, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NearestEventsSection from "../components/Events/NearestEventsSection";
+import RecommendedEventsSection from "../components/Events/RecommendedEventsSection";
 import UpcomingEventsSection from "../components/Events/UpcomingEventsSection";
-
 
 // Simple UI Components
 const Card = ({ className = "", children, ...props }) => (
@@ -109,81 +109,7 @@ const banners = [
   },
 ]
 
-const upcomingEvents = [
-  {
-    id: "7",
-    title: "AI in Healthcare Conference",
-    date: "Mar 12, 2025",
-    location: "Boston, MA",
-    rating: 4.6,
-    attendees: 300,
-    price: "$399",
-    category: "AI/Healthcare",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "8",
-    title: "Frontend Masters Workshop",
-    date: "Mar 25, 2025",
-    location: "New York, NY",
-    rating: 4.8,
-    attendees: 120,
-    price: "$199",
-    category: "Web Dev",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "9",
-    title: "Global Tech Expo",
-    date: "Apr 3, 2025",
-    location: "Las Vegas, NV",
-    rating: 4.9,
-    attendees: 2000,
-    price: "$799",
-    category: "Expo",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-]
 
-
-const recommendedEvents = [
-  {
-    id: "4",
-    title: "Cloud Computing Bootcamp",
-    date: "Jan 25, 2025",
-    location: "Seattle, WA",
-    rating: 4.8,
-    attendees: 200,
-    price: "$499",
-    category: "Cloud",
-    match: "95%",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "5",
-    title: "Blockchain Developer Summit",
-    date: "Feb 5, 2025",
-    location: "Miami, FL",
-    rating: 4.9,
-    attendees: 250,
-    price: "$349",
-    category: "Blockchain",
-    match: "88%",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
-    id: "6",
-    title: "Mobile App Development",
-    date: "Feb 18, 2025",
-    location: "Los Angeles, CA",
-    rating: 4.7,
-    attendees: 180,
-    price: "$249",
-    category: "Mobile",
-    match: "82%",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-]
 
 const categories = [
   { name: "Artificial Intelligence", count: 45, icon: "🤖", color: "bg-blue-100 text-blue-800", id:"ai-ml"},
@@ -295,74 +221,18 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
-      {/*Upcoming Events */}
-      <section className="py-16 bg-gray-50">
+        </section>
+   {/* Upcoming Events */}
+<section className="py-16 bg-gray">
   <UpcomingEventsSection />
 </section>
+
 {/* Events Near You */}
-<section className="py-16 bg-gray-50">
   <NearestEventsSection />
+{/* Recommended Events */}
+<section className="py-16 bg-gray">
+  <RecommendedEventsSection />
 </section>
-
-      {/* Recommended Events */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Recommended for You</h2>
-              <p className="text-gray-600">Personalized event suggestions based on your interests</p>
-            </div>
-            <Link to="/recommended-events">
-              <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-                View All <ArrowRight size={16} />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommendedEvents.map((event) => (
-              <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                <img
-                  src={event.image || "/placeholder.svg"}
-                  alt={event.title}
-                  className="w-full h-48 object-cover rounded-t-lg"
-                />
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <Badge variant="secondary">{event.category}</Badge>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">{event.price}</div>
-                      <div className="text-sm text-blue-600 font-medium">{event.match} match</div>
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
-                  <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} />
-                      {event.date}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin size={14} />
-                      {event.location}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Star size={14} className="text-yellow-500" />
-                      {event.rating} • {event.attendees} attendees
-                    </div>
-                  </div>
-             
-                  <Link to={`/events/${event.id}`}>
-                    <Button className="w-full">View Details</Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Grid */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -386,7 +256,9 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> 
+
+
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
@@ -397,8 +269,12 @@ export default function Home() {
               Join thousands of developers, engineers, and tech enthusiasts at our upcoming events
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/events">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+           <Link to="/events">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
+                >
                   Browse All Events
                 </Button>
               </Link>

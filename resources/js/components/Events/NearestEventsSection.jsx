@@ -460,8 +460,8 @@ export default function NearestEventsSection() {
   if (loading) return <div>Loading nearest events...</div>;
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4 ">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Events Near You</h2>

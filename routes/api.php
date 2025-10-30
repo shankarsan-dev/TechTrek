@@ -38,6 +38,7 @@ Route::middleware('auth:api')->group(function () {
      Route::post('/user/preferences', [UserPreferenceController::class, 'updatePreferences']);
     Route::get('/user/preferences', [UserPreferenceController::class, 'getUserPreferences']);
     Route::get('/recommended-events', [EventController::class, 'recommendedEvents']);
+    Route::get("/top-tags", [EventController::class, "topTags"]);
 
 
     Route::post('/logout', [LoginController::class, 'logout']);
