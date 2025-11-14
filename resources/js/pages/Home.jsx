@@ -79,7 +79,7 @@ const Badge = ({ className = "", variant = "default", children, ...props }) => {
 const banners = [
   {
     id: 1,
-    title: "AI & Machine Learning Summit 2024",
+    title: "AI & Machine Learning Summit 2026",
     subtitle: "Join 500+ developers and AI experts",
     description: "Discover the latest in artificial intelligence, machine learning, and neural networks",
     image: "/placeholder.svg?height=400&width=800",
@@ -87,7 +87,7 @@ const banners = [
     link: "/events/1",
     gradient: "from-blue-600 to-purple-600",
   },
-  {
+  { 
     id: 2,
     title: "React & Next.js Conference",
     subtitle: "Master modern web development",

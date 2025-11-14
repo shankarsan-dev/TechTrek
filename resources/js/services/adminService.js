@@ -42,6 +42,15 @@ api.interceptors.response.use(
 );
 
 export const AdminService = {
+getAdminStats: async (period = 30) => {
+    const res = await api.get(`/admin/stats/${period}`);
+    return res.data;
+  },
+
+  getAdminRecentActivity: async () => {
+    const res = await api.get("/admin/recent-activity");
+    return res.data;
+  },
 
 login: async (payload) => {
     try {
@@ -272,5 +281,23 @@ createEvent: async (formData) => {
       throw error;
     }
   },
+  getAllUsers: async ({ search = "", status = "", page = 1 } = {}) => {
+  try {
+    const response = await api.get("/admin/get-users", {
+      params: { search, status, page },
+    });
+
+    return {
+      data: response.data.data,     // list of users
+      meta: response.data.meta,     // pagination info
+    };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to load users";
+    throw new Error(errorMessage);
+  }
+},
 };
 

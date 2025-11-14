@@ -400,42 +400,42 @@ public function organizerEvents(Request $request)
         'data' => $events,
     ]);
 }
-// public function showOrganizerEvent($id)
-// {
-//     $organizer = auth()->user(); // JWT-authenticated organizer
-//     $organizerId = $organizer->_id;
+public function showOrganizerEvent($id)
+{
+    $organizer = auth()->user(); // JWT-authenticated organizer
+    $organizerId = $organizer->_id;
 
-//     // Fetch event by slug and organizer
-//     $event = Event::where('organizer_id', $organizerId)
-//         ->where('_id', $id)
-//         ->first();
+    // Fetch event by slug and organizer
+    $event = Event::where('organizer_id', $organizerId)
+        ->where('_id', $id)
+        ->first();
 
-//     if (!$event) {
-//         return response()->json([
-//             'message' => 'Event not found',
-//         ], 404);
-//     }
+    if (!$event) {
+        return response()->json([
+            'message' => 'Event not found',
+        ], 404);
+    }
 
-//     // Attach category info
-//     if (isset($event->category_id)) {
-//         $event->category = Category::find($event->category_id);
-//     }
-//     // Attach tickets info
-//     if (isset($event->tickets)) {
-//         $event->booked_count = collect($event->tickets)
-//             ->where('sold', '>', 0)
-//             ->count();
-//     } else {
-//         $tickets = Ticket::where('event_id', $event->_id)->get();
-//         $event->tickets = $tickets;
-//         $event->booked_count = $tickets->where('sold', '>', 0)->count();
-//     }
+    // Attach category info
+    if (isset($event->category_id)) {
+        $event->category = Category::find($event->category_id);
+    }
+    // Attach tickets info
+    if (isset($event->tickets)) {
+        $event->booked_count = collect($event->tickets)
+            ->where('sold', '>', 0)
+            ->count();
+    } else {
+        $tickets = Ticket::where('event_id', $event->_id)->get();
+        $event->tickets = $tickets;
+        $event->booked_count = $tickets->where('sold', '>', 0)->count();
+    }
 
-//     return response()->json([
-//         'success' => true,
-//         'data' => $event,
-//     ]);
-// }
+    return response()->json([
+        'success' => true,
+        'data' => $event,
+    ]);
+}
 
 // public function showEvent($id)
 // {

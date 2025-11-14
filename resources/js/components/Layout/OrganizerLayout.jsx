@@ -181,6 +181,533 @@
 // }
 
 // export default OrganizerLayout
+// "use client"
+
+// import {
+//   BarChart3,
+//   Bell,
+//   Calendar,
+//   LayoutDashboard,
+//   LogOut,
+//   Plus,
+//   Settings,
+//   User,
+//   Users,
+// } from "lucide-react"
+// import { Link, Outlet, useLocation } from "react-router-dom"
+// import { useAuth } from "../../contexts/AuthContext"
+
+// const OrganizerLayout = () => {
+//   const { user, logout } = useAuth()
+//   const location = useLocation()
+
+//   const navigation = [
+//     {
+//       name: "Dashboard",
+//       href: "/organizer/dashboard",
+//       icon: LayoutDashboard,
+//       current: location.pathname === "/organizer/dashboard",
+//     },
+//     {
+//       name: "Events",
+//       href: "/organizer/events",
+//       icon: Calendar,
+//       current: location.pathname.startsWith("/organizer/events"),
+//     },
+//     {
+//       name: "Attendees",
+//       href: "/organizer/attendees",
+//       icon: Users,
+//       current: location.pathname.startsWith("/organizer/attendees"),
+//     },
+//     {
+//       name: "Analytics",
+//       href: "/organizer/analytics",
+//       icon: BarChart3,
+//       current: location.pathname === "/organizer/analytics",
+//     },
+//     {
+//       name: "Settings",
+//       href: "/organizer/settings",
+//       icon: Settings,
+//       current: location.pathname === "/organizer/settings",
+//     },
+//   ]
+
+//   return (
+//     <div className="min-h-screen bg-gray-50">
+//       <div className="flex">
+//         {/* Sidebar */}
+//         <div className="hidden md:flex md:w-64 md:flex-col">
+//           <div className="flex flex-col flex-grow pt-5 bg-white overflow-y-auto border-r border-gray-200">
+//             {/* Logo */}
+//             <div className="flex items-center flex-shrink-0 px-4">
+//               <Link to="/organizer/dashboard" className="flex items-center space-x-2">
+//                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+//                   <LayoutDashboard className="h-5 w-5 text-white" />
+//                 </div>
+//                 <span className="text-xl font-bold text-gray-900">TechTrek</span>
+//               </Link>
+//             </div>
+
+//             {/* Organizer Info */}
+//             <div className="mt-8 px-4">
+//               <div className="flex items-center">
+//                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+//                   <User className="h-6 w-6 text-blue-600" />
+//                 </div>
+//                 <div className="ml-3">
+//                   <p className="text-sm font-medium text-gray-900">{user?.name || "Organizer"}</p>
+//                   <p className="text-xs text-gray-500">{user?.email || "organizer@example.com"}</p>
+//                 </div>
+//               </div>
+//             </div>
+
+//             {/* Navigation */}
+//             <nav className="mt-8 flex-1 px-2 space-y-1">
+//               {navigation.map((item) => {
+//                 const Icon = item.icon
+//                 return (
+//                   <Link
+//                     key={item.name}
+//                     to={item.href}
+//                     className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+//                       item.current ? "bg-blue-100 text-blue-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+//                     }`}
+//                   >
+//                     <Icon
+//                       className={`mr-3 flex-shrink-0 h-5 w-5 ${
+//                         item.current ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+//                       }`}
+//                     />
+//                     {item.name}
+//                   </Link>
+//                 )
+//               })}
+//             </nav>
+
+//             {/* Quick Action + Logout */}
+//             <div className="flex-shrink-0 p-4 border-t border-gray-200">
+//               <Link
+//                 to="/organizer/events/create"
+//                 className="w-full flex items-center px-2 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors mb-4"
+//               >
+//                 <Plus className="mr-2 h-4 w-4" />
+//                 Create Event
+//               </Link>
+//               <button
+//                 onClick={logout}
+//                 className="w-full flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+//               >
+//                 <LogOut className="mr-3 h-5 w-5 text-gray-400" />
+//                 Sign Out
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Mobile header */}
+//         <div className="md:hidden bg-white shadow-sm border-b px-4 py-3">
+//           <div className="flex items-center justify-between">
+//             <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
+//             <div className="flex items-center space-x-2">
+//               <Bell className="h-5 w-5 text-gray-400" />
+//               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+//                 <User className="h-4 w-4 text-blue-600" />
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Main content */}
+//         <div className="flex flex-col flex-1">
+//           <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
+//             <Outlet />
+//           </main>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default OrganizerLayout
+// "use client"
+
+// import {
+//   BarChart3,
+//   Bell,
+//   Calendar,
+//   LayoutDashboard,
+//   LogOut,
+//   Plus,
+//   Settings,
+//   User,
+//   Users,
+// } from "lucide-react"
+// import { Link, Outlet, useLocation } from "react-router-dom"
+// import { useAuth } from "../../contexts/AuthContext"
+
+// const OrganizerLayout = () => {
+//   const { user, logout } = useAuth()
+//   const location = useLocation()
+
+//   const navigation = [
+//     { name: "Dashboard", href: "/organizer/dashboard", icon: LayoutDashboard },
+//     { name: "Events", href: "/organizer/events", icon: Calendar },
+//     { name: "Attendees", href: "/organizer/attendees", icon: Users },
+//     { name: "Analytics", href: "/organizer/analytics", icon: BarChart3 },
+//     { name: "Settings", href: "/organizer/settings", icon: Settings },
+//   ]
+
+//   const isActive = (href) =>
+//     location.pathname === href || location.pathname.startsWith(href + "/")
+
+//   return (
+//     <div className="h-screen flex overflow-hidden bg-gray-50">
+//       {/* Sidebar */}
+//       <aside className="hidden md:flex md:w-64 md:flex-col bg-white border-r border-gray-200 sticky top-0 h-screen">
+//         <div className="flex flex-col flex-grow overflow-y-auto">
+//           {/* Logo */}
+//           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 flex-shrink-0">
+//             <Link to="/organizer/dashboard" className="flex items-center space-x-2">
+//               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+//                 <LayoutDashboard className="h-5 w-5 text-white" />
+//               </div>
+//               <span className="text-xl font-bold text-gray-900">TechTrek</span>
+//             </Link>
+//           </div>
+
+//           {/* Organizer Info */}
+//           <div className="mt-6 px-4 flex-shrink-0">
+//             <div className="flex items-center">
+//               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+//                 <User className="h-6 w-6 text-blue-600" />
+//               </div>
+//               <div className="ml-3">
+//                 <p className="text-sm font-medium text-gray-900">
+//                   {user?.name || "Organizer"}
+//                 </p>
+//                 <p className="text-xs text-gray-500 truncate">
+//                   {user?.email || "organizer@example.com"}
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Navigation */}
+//           <nav className="mt-8 flex-1 px-3 space-y-1 overflow-y-auto">
+//             {navigation.map((item) => {
+//               const Icon = item.icon
+//               const active = isActive(item.href)
+//               return (
+//                 <Link
+//                   key={item.name}
+//                   to={item.href}
+//                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+//                     active
+//                       ? "bg-blue-100 text-blue-900"
+//                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+//                   }`}
+//                 >
+//                   <Icon
+//                     className={`mr-3 h-5 w-5 ${
+//                       active
+//                         ? "text-blue-600"
+//                         : "text-gray-400 group-hover:text-gray-500"
+//                     }`}
+//                   />
+//                   {item.name}
+//                 </Link>
+//               )
+//             })}
+//           </nav>
+
+//           {/* Quick Action + Logout */}
+//           <div className="p-4 border-t border-gray-200 flex-shrink-0">
+//             <Link
+//               to="/organizer/events/create"
+//               className="flex items-center w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors mb-3"
+//             >
+//               <Plus className="h-4 w-4 mr-2" />
+//               Create Event
+//             </Link>
+//             <button
+//               onClick={logout}
+//               className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+//             >
+//               <LogOut className="h-5 w-5 mr-2 text-gray-400" />
+//               Sign Out
+//             </button>
+//           </div>
+//         </div>
+//       </aside>
+
+//       {/* Main Content */}
+//       <div className="flex-1 flex flex-col overflow-hidden">
+//         {/* Mobile Header */}
+//         <header className="md:hidden bg-white shadow-sm border-b px-4 py-3 sticky top-0 z-10">
+//           <div className="flex items-center justify-between">
+//             <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
+//             <div className="flex items-center space-x-2">
+//               <Bell className="h-5 w-5 text-gray-400" />
+//               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+//                 <User className="h-4 w-4 text-blue-600" />
+//               </div>
+//             </div>
+//           </div>
+//         </header>
+
+//         {/* Scrollable Content */}
+//         <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+//           <Outlet />
+//         </main>
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default OrganizerLayout
+// "use client"
+
+// import {
+//   BarChart3,
+//   Bell,
+//   Calendar,
+//   LayoutDashboard,
+//   LogOut,
+//   Plus,
+//   Settings,
+//   User,
+//   Users,
+//   Menu,
+//   X,
+// } from "lucide-react"
+// import { Link, Outlet, useLocation } from "react-router-dom"
+// import { useAuth } from "../../contexts/AuthContext"
+// import { useState } from "react"
+
+// const OrganizerLayout = () => {
+//   const { user, logout } = useAuth()
+//   const location = useLocation()
+//   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+//   const navigation = [
+//     { name: "Dashboard", href: "/organizer/dashboard", icon: LayoutDashboard },
+//     { name: "Events", href: "/organizer/events", icon: Calendar },
+//     { name: "Attendees", href: "/organizer/attendees", icon: Users },
+//     { name: "Analytics", href: "/organizer/analytics", icon: BarChart3 },
+//     { name: "Settings", href: "/organizer/settings", icon: Settings },
+//   ]
+
+//   const isActive = (href) =>
+//     location.pathname === href || location.pathname.startsWith(href + "/")
+
+//   return (
+//     <div className="h-screen flex overflow-hidden bg-gray-50">
+//       {/* Desktop Sidebar */}
+//       <aside className="hidden md:flex md:w-64 md:flex-col bg-white border-r border-gray-200 sticky top-0 h-screen">
+//         <div className="flex flex-col flex-grow overflow-y-auto">
+//           {/* Logo */}
+//           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 flex-shrink-0">
+//             <Link to="/organizer/dashboard" className="flex items-center space-x-2">
+//               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+//                 <LayoutDashboard className="h-5 w-5 text-white" />
+//               </div>
+//               <span className="text-xl font-bold text-gray-900">TechTrek</span>
+//             </Link>
+//           </div>
+
+//           {/* Organizer Info */}
+//           <div className="mt-6 px-4 flex-shrink-0">
+//             <div className="flex items-center">
+//               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+//                 <User className="h-6 w-6 text-blue-600" />
+//               </div>
+//               <div className="ml-3">
+//                 <p className="text-sm font-medium text-gray-900">
+//                   {user?.name || "Organizer"}
+//                 </p>
+//                 <p className="text-xs text-gray-500 truncate">
+//                   {user?.email || "organizer@example.com"}
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Navigation */}
+//           <nav className="mt-8 flex-1 px-3 space-y-1 overflow-y-auto">
+//             {navigation.map((item) => {
+//               const Icon = item.icon
+//               const active = isActive(item.href)
+//               return (
+//                 <Link
+//                   key={item.name}
+//                   to={item.href}
+//                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+//                     active
+//                       ? "bg-blue-100 text-blue-900"
+//                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+//                   }`}
+//                 >
+//                   <Icon
+//                     className={`mr-3 h-5 w-5 ${
+//                       active
+//                         ? "text-blue-600"
+//                         : "text-gray-400 group-hover:text-gray-500"
+//                     }`}
+//                   />
+//                   {item.name}
+//                 </Link>
+//               )
+//             })}
+//           </nav>
+
+//           {/* Quick Action + Logout */}
+//           <div className="p-4 border-t border-gray-200 flex-shrink-0">
+//             <Link
+//               to="/organizer/events/create"
+//               className="flex items-center w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors mb-3"
+//             >
+//               <Plus className="h-4 w-4 mr-2" />
+//               Create Event
+//             </Link>
+//             <button
+//               onClick={logout}
+//               className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+//             >
+//               <LogOut className="h-5 w-5 mr-2 text-gray-400" />
+//               Sign Out
+//             </button>
+//           </div>
+//         </div>
+//       </aside>
+
+//       {/* Mobile Sidebar Drawer */}
+//       {mobileSidebarOpen && (
+//         <>
+//           {/* Overlay */}
+//           <div
+//             className="fixed inset-0 bg-black bg-opacity-40 z-40"
+//             onClick={() => setMobileSidebarOpen(false)}
+//           ></div>
+
+//           {/* Drawer from Right */}
+//           <div className="fixed top-0 right-0 w-64 h-full bg-white z-50 shadow-xl transform transition-transform duration-300 translate-x-0">
+//             <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+//               <Link
+//                 to="/organizer/dashboard"
+//                 className="flex items-center space-x-2"
+//                 onClick={() => setMobileSidebarOpen(false)}
+//               >
+//                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+//                   <LayoutDashboard className="h-5 w-5 text-white" />
+//                 </div>
+//                 <span className="text-xl font-bold text-gray-900">TechTrek</span>
+//               </Link>
+//               <button
+//                 onClick={() => setMobileSidebarOpen(false)}
+//                 className="p-2 rounded-md hover:bg-gray-100"
+//               >
+//                 <X className="h-5 w-5 text-gray-500" />
+//               </button>
+//             </div>
+
+//             {/* Drawer Navigation */}
+//             <div className="p-4 overflow-y-auto">
+//               <div className="flex items-center mb-6">
+//                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+//                   <User className="h-6 w-6 text-blue-600" />
+//                 </div>
+//                 <div className="ml-3">
+//                   <p className="text-sm font-medium text-gray-900">
+//                     {user?.name || "Organizer"}
+//                   </p>
+//                   <p className="text-xs text-gray-500 truncate">
+//                     {user?.email || "organizer@example.com"}
+//                   </p>
+//                 </div>
+//               </div>
+
+//               {navigation.map((item) => {
+//                 const Icon = item.icon
+//                 const active = isActive(item.href)
+//                 return (
+//                   <Link
+//                     key={item.name}
+//                     to={item.href}
+//                     onClick={() => setMobileSidebarOpen(false)}
+//                     className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+//                       active
+//                         ? "bg-blue-100 text-blue-900"
+//                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+//                     }`}
+//                   >
+//                     <Icon
+//                       className={`mr-3 h-5 w-5 ${
+//                         active
+//                           ? "text-blue-600"
+//                           : "text-gray-400 group-hover:text-gray-500"
+//                       }`}
+//                     />
+//                     {item.name}
+//                   </Link>
+//                 )
+//               })}
+
+//               <div className="mt-6 border-t border-gray-200 pt-4">
+//                 <Link
+//                   to="/organizer/events/create"
+//                   onClick={() => setMobileSidebarOpen(false)}
+//                   className="flex items-center w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors mb-3"
+//                 >
+//                   <Plus className="h-4 w-4 mr-2" />
+//                   Create Event
+//                 </Link>
+//                 <button
+//                   onClick={() => {
+//                     logout()
+//                     setMobileSidebarOpen(false)
+//                   }}
+//                   className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+//                 >
+//                   <LogOut className="h-5 w-5 mr-2 text-gray-400" />
+//                   Sign Out
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         </>
+//       )}
+
+//       {/* Main Content */}
+//       <div className="flex-1 flex flex-col overflow-hidden">
+//         {/* Mobile Header */}
+//         <header className="md:hidden bg-white shadow-sm border-b px-4 py-3 sticky top-0 z-10 flex justify-between items-center">
+//           <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
+//           <div className="flex items-center space-x-3">
+//             <Bell className="h-5 w-5 text-gray-400" />
+//             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+//               <User className="h-4 w-4 text-blue-600" />
+//             </div>
+//             <button
+//               onClick={() => setMobileSidebarOpen(true)}
+//               className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+//             >
+//               <Menu className="h-5 w-5" />
+//             </button>
+//           </div>
+//         </header>
+
+//         {/* Scrollable Content */}
+//         <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+//           <Outlet />
+//         </main>
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default OrganizerLayout
 "use client"
 
 import {
@@ -189,142 +716,233 @@ import {
   Calendar,
   LayoutDashboard,
   LogOut,
+  Menu,
   Plus,
   Settings,
   User,
   Users,
+  X,
 } from "lucide-react"
+import { useState } from "react"
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
 
 const OrganizerLayout = () => {
   const { user, logout } = useAuth()
   const location = useLocation()
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   const navigation = [
-    {
-      name: "Dashboard",
-      href: "/organizer/dashboard",
-      icon: LayoutDashboard,
-      current: location.pathname === "/organizer/dashboard",
-    },
-    {
-      name: "Events",
-      href: "/organizer/events",
-      icon: Calendar,
-      current: location.pathname.startsWith("/organizer/events"),
-    },
-    {
-      name: "Attendees",
-      href: "/organizer/attendees",
-      icon: Users,
-      current: location.pathname.startsWith("/organizer/attendees"),
-    },
-    {
-      name: "Analytics",
-      href: "/organizer/analytics",
-      icon: BarChart3,
-      current: location.pathname === "/organizer/analytics",
-    },
-    {
-      name: "Settings",
-      href: "/organizer/settings",
-      icon: Settings,
-      current: location.pathname === "/organizer/settings",
-    },
+    { name: "Dashboard", href: "/organizer/dashboard", icon: LayoutDashboard },
+    { name: "Events", href: "/organizer/events", icon: Calendar },
+    { name: "Attendees", href: "/organizer/attendees", icon: Users },
+    { name: "Analytics", href: "/organizer/analytics", icon: BarChart3 },
+    { name: "Settings", href: "/organizer/settings", icon: Settings },
   ]
 
+  const isActive = (href) =>
+    location.pathname === href || location.pathname.startsWith(href + "/")
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="hidden md:flex md:w-64 md:flex-col">
-          <div className="flex flex-col flex-grow pt-5 bg-white overflow-y-auto border-r border-gray-200">
-            {/* Logo */}
-            <div className="flex items-center flex-shrink-0 px-4">
-              <Link to="/organizer/dashboard" className="flex items-center space-x-2">
+    <div className="h-screen flex overflow-hidden bg-gray-50">
+      {/* === Desktop Sidebar === */}
+      <aside className="hidden md:flex md:w-64 md:flex-col bg-white border-r border-gray-200 sticky top-0 h-screen">
+        <div className="flex flex-col flex-grow overflow-y-auto">
+          {/* Logo */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 flex-shrink-0">
+            <Link to="/organizer/dashboard" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <LayoutDashboard className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">TechTrek</span>
+            </Link>
+          </div>
+
+          {/* Organizer Info */}
+          <div className="mt-6 px-4 flex-shrink-0">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <User className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.name || "Organizer"}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.email || "organizer@example.com"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="mt-8 flex-1 px-3 space-y-1 overflow-y-auto">
+            {navigation.map((item) => {
+              const Icon = item.icon
+              const active = isActive(item.href)
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    active
+                      ? "bg-blue-100 text-blue-900"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
+                >
+                  <Icon
+                    className={`mr-3 h-5 w-5 ${
+                      active
+                        ? "text-blue-600"
+                        : "text-gray-400 group-hover:text-gray-500"
+                    }`}
+                  />
+                  {item.name}
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* Quick Action + Logout */}
+          <div className="p-4 border-t border-gray-200 flex-shrink-0">
+            <Link
+              to="/organizer/events/create"
+              className="flex items-center w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors mb-3"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Event
+            </Link>
+            <button
+              onClick={logout}
+              className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            >
+              <LogOut className="h-5 w-5 mr-2 text-gray-400" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* === Mobile Sidebar Drawer (Left) === */}
+      {mobileSidebarOpen && (
+        <>
+          {/* Soft Blur Overlay */}
+          <div
+            className="fixed inset-0 backdrop-blur-sm bg-white/30 z-40"
+            onClick={() => setMobileSidebarOpen(false)}
+          ></div>
+
+          {/* Drawer Panel */}
+          <div className="fixed top-0 left-0 w-64 h-full bg-white z-50 shadow-xl transform transition-transform duration-300 translate-x-0">
+            <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+              <Link
+                to="/organizer/dashboard"
+                className="flex items-center space-x-2"
+                onClick={() => setMobileSidebarOpen(false)}
+              >
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <LayoutDashboard className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-900">TechTrek</span>
               </Link>
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="p-2 rounded-md hover:bg-gray-100"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
             </div>
 
-            {/* Organizer Info */}
-            <div className="mt-8 px-4">
-              <div className="flex items-center">
+            {/* Drawer Content */}
+            <div className="p-4 overflow-y-auto">
+              <div className="flex items-center mb-6">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                   <User className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">{user?.name || "Organizer"}</p>
-                  <p className="text-xs text-gray-500">{user?.email || "organizer@example.com"}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.name || "Organizer"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user?.email || "organizer@example.com"}
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Navigation */}
-            <nav className="mt-8 flex-1 px-2 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon
+                const active = isActive(item.href)
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                      item.current ? "bg-blue-100 text-blue-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      active
+                        ? "bg-blue-100 text-blue-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                   >
                     <Icon
-                      className={`mr-3 flex-shrink-0 h-5 w-5 ${
-                        item.current ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                      className={`mr-3 h-5 w-5 ${
+                        active
+                          ? "text-blue-600"
+                          : "text-gray-400 group-hover:text-gray-500"
                       }`}
                     />
                     {item.name}
                   </Link>
                 )
               })}
-            </nav>
 
-            {/* Quick Action + Logout */}
-            <div className="flex-shrink-0 p-4 border-t border-gray-200">
-              <Link
-                to="/organizer/events/create"
-                className="w-full flex items-center px-2 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors mb-4"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Event
-              </Link>
-              <button
-                onClick={logout}
-                className="w-full flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
-              >
-                <LogOut className="mr-3 h-5 w-5 text-gray-400" />
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile header */}
-        <div className="md:hidden bg-white shadow-sm border-b px-4 py-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
-            <div className="flex items-center space-x-2">
-              <Bell className="h-5 w-5 text-gray-400" />
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-blue-600" />
+              <div className="mt-6 border-t border-gray-200 pt-4">
+                <Link
+                  to="/organizer/events/create"
+                  onClick={() => setMobileSidebarOpen(false)}
+                  className="flex items-center w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors mb-3"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Event
+                </Link>
+                <button
+                  onClick={() => {
+                    logout()
+                    setMobileSidebarOpen(false)
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                >
+                  <LogOut className="h-5 w-5 mr-2 text-gray-400" />
+                  Sign Out
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        </>
+      )}
 
-        {/* Main content */}
-        <div className="flex flex-col flex-1">
-          <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-            <Outlet />
-          </main>
-        </div>
+      {/* === Main Content === */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header */}
+        <header className="md:hidden bg-white shadow-sm border-b px-4 py-3 sticky top-0 z-10 flex justify-between items-center">
+          <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
+          <div className="flex items-center space-x-3">
+            <Bell className="h-5 w-5 text-gray-400" />
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="h-4 w-4 text-blue-600" />
+            </div>
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Outlet />
+        </main>
       </div>
     </div>
   )

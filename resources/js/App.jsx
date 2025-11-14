@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom"
 import Layout from "./components/Layout/Layout"
 import { AuthProvider } from "./contexts/AuthContext"
+
 import AdminLogin from "./pages/Auth/AdminLogin"
 import ForgotPassword from "./pages/Auth/ForgotPassword"
 import Login from "./pages/Auth/Login"
@@ -12,7 +13,6 @@ import Categories from "./pages/Categories"
 import EventDetails from "./pages/EventDetails"
 import Events from "./pages/Events"
 import EventsNearYou from "./pages/EventsNearYou"
-import Profile from "./pages/Profile"
 import RecommendedEvents from "./pages/RecommendedEvents"
 // Organizer Pages
 import OrganizerLayout from "./components/Layout/OrganizerLayout"
@@ -26,17 +26,21 @@ import EventEdit from "./pages/Organizer/EventEdit"
 import OrganizerEvents from "./pages/Organizer/Events"
 import OrganizerSettings from "./pages/Organizer/Settings"
 
+
 // Admin Pages
 import AdminLayout from "./components/Layout/AdminLayout"
+import AdminProfile from "./pages/Admin/AdminProfile"
 import AdminDashboard from "./pages/Admin/Dashboard"
+import EventManagement from "./pages/Admin/EventManagement"
+import OrganizerManagement from "./pages/Admin/OrganizerManagement"
 import OrganizerVerification from "./pages/Admin/OrganizerVerification"
-
+import UserManagement from "./pages/Admin/UserManagement"
 // User Dashboard
+import ProtectedRoute from "./components/Auth/ProtectedRoute"
 import UserLayout from "./components/Layout/UserLayout"
+import UserProfile from "./pages/Profile"
 import UserDashboard from "./pages/User/Dashboard"
 import UserFavorites from "./pages/User/Favorites"
-
-import ProtectedRoute from "./components/Auth/ProtectedRoute"
 
 import "../css/app.css"
 import Home from "./pages/Home"
@@ -81,7 +85,7 @@ function App() {
                 }
               >
                 <Route index element={<UserDashboard />} />
-                <Route path="profile" element={<Profile />} />
+                <Route path="profile" element={<UserProfile />} />
                 <Route path="bookings" element={<Bookings />} />
                 <Route path="favorites" element={<UserFavorites />} />
                 <Route path="settings" element={<div>User Settings Page</div>} />
@@ -105,6 +109,7 @@ function App() {
                 <Route path="analytics" element={<OrganizerAnalytics />} />
                 <Route path="attendees" element={<OrganizerAttendees />} />
                 <Route path="settings" element={<OrganizerSettings />} />
+                
               </Route>
 
               {/* Admin Routes - Protected */}
@@ -117,8 +122,12 @@ function App() {
                 }
               >
                 <Route index element={<AdminDashboard />} />
+                <Route path="organizer-management" element={<OrganizerManagement />} />
                 <Route path="organizer-verification" element={<OrganizerVerification />} />
+                <Route path="profile" element={<AdminProfile />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="event-management" element={<EventManagement />} />
                 <Route path="users" element={<div>User Management Page</div>} />
                 <Route path="events" element={<div>Event Monitoring Page</div>} />
                 <Route path="analytics" element={<div>Admin Analytics Page</div>} />

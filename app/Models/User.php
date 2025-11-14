@@ -20,12 +20,25 @@ class User extends Eloquent implements AuthenticatableContract, JWTSubject
 
     // Fillable fields for mass assignment
     protected $fillable = [
+        // 'name',
+        // 'email',
+        // 'password',
+        // 'role',
+        // 'organization_name',
+        // 'kyc_document_path',
+        // 'phone',
+     
         'name',
         'email',
+        'phone',
+        'country',
+        'city',
         'password',
         'role',
         'organization_name',
         'kyc_document_path',
+        'status',
+    
     ];
 
     // Hidden fields from JSON responses
@@ -57,6 +70,7 @@ class User extends Eloquent implements AuthenticatableContract, JWTSubject
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role,
+            'phone' => $this->phone,
         ];
     }
 
@@ -71,4 +85,5 @@ class User extends Eloquent implements AuthenticatableContract, JWTSubject
     {
         return $value ?: 'user';
     }
+    
 }

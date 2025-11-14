@@ -25,31 +25,7 @@ class BookingController extends Controller
 public function getUserBookings(Request $request)
 {
      $user = auth()->user();
-    // $bookings = Booking::with(['event', 'ticket'])
-    //     ->where('user_id', $user->id)
-    //     ->latest()
-    //     ->get()
-    //     ->map(function ($booking) {
-    //         $ticketName  = $booking->ticket->name ?? 'General Ticket';
-    //         $ticketPrice = $booking->ticket->price ?? 0;
-    //         $quantity    = $booking->quantity ?? 1;
-    //         $totalPrice  = $ticketPrice * $quantity;
-    //         $userId = $booking->user_id;
-    //         return [
-    //             'id'          => $booking->id,
-    //             'eventName'   => $booking->event->title ?? 'Unknown Event',
-    //             'date'        => $booking->event->start_date ?? null,
-    //             'time'        => $booking->event->start_time ?? null,
-    //             'location'    => $booking->event->location ?? null,
-    //             'status'      => ucfirst($booking->status ),
-    //             'ticketType'  => $ticketName,
-    //             'ticketPrice' =>  number_format($ticketPrice, 2),
-    //             'tickets'     => $quantity,
-    //             'totalPrice'  =>  number_format($totalPrice, 2),
-    //             'qr_code'         => $booking->qr_code,
-    //             'event_id'    => $booking->event_id,
-    //             'user_id'     => $userId,
-    //         ];
+   
     //     });
 $bookings = Booking::with(['event', 'ticket'])
 

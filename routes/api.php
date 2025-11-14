@@ -6,8 +6,12 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BookingController;
-use App\Http\Controllers\UserPreferenceController;  
+use App\Http\Controllers\UserPreferenceController;
+use App\Http\Controllers\AttendeesController;
+use App\Http\Controllers\AdminController;
+
 /*
+
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
@@ -28,27 +32,21 @@ Route::get('/events/{id}', [EventController::class, 'showEvent']);
 | Protected Routes (JWT Auth)
 |--------------------------------------------------------------------------
 */
-//Route::post('/verify-qr-code', [BookingController::class, 'verifyQrCode']);
+
+
+
 Route::middleware('auth:api')->group(function () {
-
-    // Logout for all authenticated users
-
-    // Route::post('/user-preferences', [UserPreferenceController::class, 'store']);
-    // Route::get('/user-preferences/top-tags', [UserPreferenceController::class, 'topTags']);
-     Route::post('/user/preferences', [UserPreferenceController::class, 'updatePreferences']);
-    Route::get('/user/preferences', [UserPreferenceController::class, 'getUserPreferences']);
-    Route::get('/recommended-events', [EventController::class, 'recommendedEvents']);
-    Route::get("/top-tags", [EventController::class, "topTags"]);
-
 
     Route::post('/logout', [LoginController::class, 'logout']);
     // User-specific routes
-
-        //Route::get('/events/{slug}', [EventController::class, 'show']);
         Route::get('/user-bookings', [BookingController::class, 'getUserBookings']);
-        // Route::get('/events/{slug}/recommend', [EventController::class, 'recommend']);
+   
+    Route::get('/attendees', [AttendeesController::class, 'getOrganizerBookings']);
+    Route::post('/user/preferences', [UserPreferenceController::class, 'updatePreferences']);
+    Route::get('/user/preferences', [UserPreferenceController::class, 'getUserPreferences']);
+    Route::get('/recommended-events', [EventController::class, 'recommendedEvents']);
+    Route::get("/top-tags", [EventController::class, "topTags"]);
     // Organizer-specific routes
-
         Route::post('/events', [EventController::class, 'store']);
         Route::get('/organizer/events', [EventController::class, 'organizerEvents']); Route::get('/organizer/events/{id}', [EventController::class, 'showOrganizerEvent']);
         Route::put('/organizer/events/{slug}', [EventController::class, 'update']);
@@ -56,28 +54,14 @@ Route::middleware('auth:api')->group(function () {
         
 
 
-
+//Admin-specific routes
+        Route::get("/admin-test", function() {
+            return response()->json(["message" => "Admin access granted"]);
+        }); 
+        Route::get('/admin/stats/{period?}', [AdminController::class, 'stats']);
+        Route::get('/admin/recent-activity', [AdminController::class, 'recentActivity']);
         
-Route::get('/bookings', [BookingController::class, 'index']); // List bookings for authenticated user
-Route::post('/bookings', [BookingController::class, 'store']); // Create a booking
-Route::put('/bookings/{id}/cancel', [BookingController::class, 'cancelBooking']); // Cancel a booking
-
+Route::get('/admin/get-users', [AdminController::class, 'allUsers']);
+Route::get('/admin/organizers', [AdminController::class, 'organizers']);
+Route::get('/admin/users/normal', [AdminController::class, 'normalUsers']);
 });
-
-Route::middleware('auth:api')->get('/test-user', function (Request $request) {
-    $user = auth()->user(); // fetch user from JWT
-    return response()->json([
-        'success' => true,
-        'user' => $user,
-    ]);
-});
-
-
-
-
-
-
-Route::post('/pay/{ticket}', [PaymentController::class, 'pay']); // API endpoint to start payment
-Route::post('/verify', [PaymentController::class, 'verify'])->name('api.payment.verify'); // Verification callback
-
-
