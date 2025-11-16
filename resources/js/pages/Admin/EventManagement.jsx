@@ -1,114 +1,99 @@
-// src/pages/admin/EventManagement.jsx
-import {
-    Calendar,
-    DollarSign,
-    Edit,
-    Eye,
-    Filter,
-    MapPin,
-    Search,
-    Tag,
-    Trash2,
-    User,
-    Users
-} from "lucide-react"
-import { useState } from "react"
+"use client"
+
+import { CalendarDays, DollarSign, Edit, Eye, Search, Trash2, Users } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Link, useSearchParams } from "react-router-dom"
+import { eventService } from "../../services/eventService"
 
 const EventManagement = () => {
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: "Tech Conference 2024",
-      organizer: "TechCorp Events",
-      date: "2024-03-15",
-      time: "09:00 - 18:00",
-      location: "San Francisco Convention Center",
-      city: "San Francisco, CA",
-      attendees: 500,
-      capacity: 600,
-      status: "published",
-      category: "Technology",
-      price: 99.99,
-      revenue: 24500,
-      ticketsSold: 245
-    },
-    {
-      id: 2,
-      title: "Music Festival Weekend",
-      organizer: "Music Festivals Inc",
-      date: "2024-04-20",
-      time: "12:00 - 23:00",
-      location: "Zilker Park",
-      city: "Austin, TX",
-      attendees: 2000,
-      capacity: 2500,
-      status: "published",
-      category: "Music",
-      price: 149.99,
-      revenue: 120000,
-      ticketsSold: 800
-    },
-    {
-      id: 3,
-      title: "Startup Workshop Series",
-      organizer: "TechCorp Events",
-      date: "2024-02-10",
-      time: "10:00 - 16:00",
-      location: "WeWork Downtown",
-      city: "New York, NY",
-      attendees: 50,
-      capacity: 60,
-      status: "draft",
-      category: "Business",
-      price: 0,
-      revenue: 0,
-      ticketsSold: 12
-    }
-  ])
+  const [events, setEvents] = useState([])
+  const [categories, setCategories] = useState([{ id: "all", name: "All Categories" }])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const [filters, setFilters] = useState({
-    status: 'all',
-    category: 'all',
-    search: ''
-  })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedCategory = searchParams.get("category_id") || "all"
+  const selectedFilter = searchParams.get("filter") || "all"
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'published':
-        return 'bg-green-100 text-green-800'
-      case 'draft':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+  // Fetch categories once
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await eventService.getCategories()
+        setCategories([{ id: "all", name: "All Categories" }, ...data])
+      } catch (err) {
+        console.error("Failed to fetch categories:", err)
+      }
     }
+    fetchCategories()
+  }, [])
+
+  // Fetch events whenever category, search term, or filter changes
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true)
+      try {
+        const filters = {
+          category_id: selectedCategory,
+          search: searchTerm,
+          filter: selectedFilter,
+          limit: 50, // Show more events in admin panel
+        }
+        const data = await eventService.getEvents(filters)
+        setEvents(data)
+      } catch (err) {
+        console.error("Failed to fetch events:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchEvents()
+  }, [selectedCategory, searchTerm, selectedFilter])
+
+  // Update URL params
+  const handleCategoryChange = (e) => {
+    const value = e.target.value
+    if (value === "all") searchParams.delete("category_id")
+    else searchParams.set("category_id", value)
+    setSearchParams(searchParams)
   }
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(amount)
+  const handleFilterChange = (e) => {
+    const value = e.target.value
+    if (value === "all") searchParams.delete("filter")
+    else searchParams.set("filter", value)
+    setSearchParams(searchParams)
   }
 
-  const handleDeleteEvent = (eventId) => {
+  const handleDeleteEvent = async (eventId) => {
     if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-      setEvents(events => events.filter(event => event.id !== eventId))
+      try {
+        await eventService.deleteEvent(eventId)
+        setEvents(events => events.filter(event => event.id !== eventId))
+      } catch (err) {
+        console.error('Failed to delete event:', err)
+        alert('Failed to delete event. Please try again.')
+      }
     }
   }
 
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-                         event.organizer.toLowerCase().includes(filters.search.toLowerCase())
-    const matchesStatus = filters.status === 'all' || event.status === filters.status
-    const matchesCategory = filters.category === 'all' || event.category === filters.category
+  const getStatusColor = (event) => {
+    const now = new Date()
+    const eventDate = new Date(event.start_date)
     
-    return matchesSearch && matchesStatus && matchesCategory
-  })
+    if (eventDate < now) return 'bg-gray-100 text-gray-800'
+    if (event.booked_count >= event.capacity) return 'bg-red-100 text-red-800'
+    return 'bg-green-100 text-green-800'
+  }
 
-  const categories = [...new Set(events.map(event => event.category))]
+  const getStatusText = (event) => {
+    const now = new Date()
+    const eventDate = new Date(event.start_date)
+    
+    if (eventDate < now) return 'Completed'
+    if (event.booked_count >= event.capacity) return 'Sold Out'
+    return 'Active'
+  }
 
   return (
     <div className="space-y-6">
@@ -119,158 +104,155 @@ const EventManagement = () => {
           <p className="text-gray-600">Manage all platform events</p>
         </div>
         <div className="text-sm text-gray-500">
-          {filteredEvents.length} events found
+          {events.length} events found
         </div>
       </div>
 
-      {/* Filters and Search */}
+      {/* Filters */}
       <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          {/* Search */}
+          <div className="relative flex-1">
             <input
               type="text"
               placeholder="Search events..."
-              value={filters.search}
-              onChange={(e) => setFilters({...filters, search: e.target.value})}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           </div>
-          <select 
-            value={filters.status}
-            onChange={(e) => setFilters({...filters, status: e.target.value})}
-            className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+
+          {/* Category Filter */}
+          <select
+            className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-w-[200px]"
+            value={selectedCategory}
+            onChange={handleCategoryChange}
           >
-            <option value="all">All Status</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <select 
-            value={filters.category}
-            onChange={(e) => setFilters({...filters, category: e.target.value})}
-            className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            <option value="all">All Categories</option>
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
             ))}
           </select>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Filter className="h-4 w-4" />
-            Filters
-          </button>
+
+          {/* Date Filter */}
+          <select
+            className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-w-[150px]"
+            value={selectedFilter}
+            onChange={handleFilterChange}
+          >
+            <option value="all">All Time</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+          </select>
         </div>
       </div>
 
-      {/* Events Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Event
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date & Location
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Metrics
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredEvents.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Calendar className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-semibold text-gray-900">
-                          {event.title}
-                        </h3>
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <User className="h-4 w-4 mr-1" />
-                          {event.organizer}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <Tag className="h-4 w-4 mr-1" />
-                          {event.category}
-                        </div>
-                      </div>
+      {/* Events Grid */}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500 text-lg">Loading events...</div>
+      ) : events.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-gray-500 text-lg mb-4">No events found matching your criteria.</p>
+          <button
+            onClick={() => {
+              setSearchTerm("")
+              searchParams.delete("category_id")
+              searchParams.delete("filter")
+              setSearchParams(searchParams)
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => (
+            <div
+              key={event.id || event._id}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              {/* Event Image */}
+              <div className="relative">
+                <img
+                  src={event.featured_image || "/placeholder.svg"}
+                  alt={event.title}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute top-3 left-3">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(event)}`}>
+                    {getStatusText(event)}
+                  </span>
+                </div>
+                <div className="absolute top-3 right-3">
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                    {categories.find((c) => c.id === event.category_id)?.name || event.category_name}
+                  </span>
+                </div>
+              </div>
+
+              {/* Event Content */}
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">
+                    {event.title}
+                  </h3>
+                  <span className="text-lg font-bold text-green-600 whitespace-nowrap">
+                    {event.price ? `Rs. ${event.price}` : "Free"}
+                  </span>
+                </div>
+
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <CalendarDays size={16} className="mr-2" />
+                    {event.start_date} | {event.start_time}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Users size={16} className="mr-2" />
+                    {event.booked_count || 0} / {event.capacity || 0} attendees
+                  </div>
+                  {event.price > 0 && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <DollarSign size={16} className="mr-2" />
+                      Revenue: Rs. {(event.price * (event.booked_count || 0)).toLocaleString()}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      {new Date(event.date).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </div>
-                    <div className="text-sm text-gray-500">{event.time}</div>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-                      {event.city}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(event.status)}`}>
-                      {event.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1 text-gray-400" />
-                        {event.attendees}/{event.capacity}
-                      </div>
-                      <div className="flex items-center mt-1">
-                        <DollarSign className="h-4 w-4 mr-1 text-gray-400" />
-                        {formatCurrency(event.revenue)}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
+                  )}
+                </div>
+
+                <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                  {event.description}
+                </p>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <Link to={`/events/${event.id || event._id}`}>
                       <button className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors">
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteEvent(event.id)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </Link>
+                    <button className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteEvent(event.id || event._id)}
+                      className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Organizer: {event.organizer_name || 'Unknown'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        
-        {/* Empty State */}
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
-            <p className="text-gray-500">Try adjusting your search or filters</p>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

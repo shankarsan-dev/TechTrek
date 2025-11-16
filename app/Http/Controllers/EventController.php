@@ -226,6 +226,7 @@ public function index(Request $request)
             'is_free',
             'capacity',
             'tags',
+            'organizer_id'
         ]);
 
  
