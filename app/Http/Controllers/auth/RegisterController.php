@@ -183,7 +183,7 @@ class RegisterController extends Controller
         if ($request->hasFile('kycDocument')) {
             $file = $request->file('kycDocument');
             $filename = 'kyc_' . Str::random(32) . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $kycPath = $file->storeAs('kyc_documents', $filename, 'public');
+            $kycPath = $file->storeAs('kyc_documents', $filename, 'private');
         }
 
         // Create the user in MongoDB

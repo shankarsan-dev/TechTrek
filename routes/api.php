@@ -9,6 +9,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\AttendeesController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DocumentController;
 
 /*
 
@@ -62,6 +63,18 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/admin/recent-activity', [AdminController::class, 'recentActivity']);
         
 Route::get('/admin/get-users', [AdminController::class, 'allUsers']);
-Route::get('/admin/organizers', [AdminController::class, 'organizers']);
+Route::get('/admin/get-organizers', [AdminController::class, 'organizers']);
+
 Route::get('/admin/users/normal', [AdminController::class, 'normalUsers']);
+
+Route::post('/admin/organizers/{id}/approve', [AdminController::class, 'approve']);
+    Route::post('/admin/organizers/{id}/reject', [AdminController::class, 'reject']);
+    Route::post('/admin/organizers/{id}/cancel', [AdminController::class, 'cancel']);
+
+});
+
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('/secure-documents/{userId}/{filename}', [DocumentController::class, 'viewDocument']);
+    Route::get('/secure-documents/{userId}/{filename}/download', [DocumentController::class, 'downloadDocument']);
 });

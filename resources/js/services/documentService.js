@@ -1,0 +1,1111 @@
+// import axios from 'axios';
+
+// const documentService = {
+//   // Fetch document as blob with authentication
+//   fetchSecureDocument: async (url, action = 'view') => {
+//     try {
+//       const token = localStorage.getItem('auth_token');
+      
+//       const response = await axios.get(url, {
+//         headers: {
+//           'Authorization': `Bearer ${token}`,
+//         },
+//         responseType: 'blob', // Important for file downloads
+//       });
+
+//       return response.data;
+//     } catch (error) {
+//       console.error(`Error ${action}ing document:`, error);
+      
+//       if (error.response?.status === 401) {
+//         // Token expired or invalid
+//         localStorage.removeItem('auth_token');
+//         window.location.href = '/login';
+//         return;
+//       }
+      
+//       throw new Error(`Failed to ${action} document: ${error.response?.data?.message || error.message}`);
+//     }
+//   },
+
+//   // View document in new tab
+//   viewDocument: async (userId, filename, originalName = null) => {
+//     try {
+//       const token = localStorage.getItem('auth_token');
+//       const url = `/api/secure-documents/${userId}/${filename}`;
+      
+//       const blob = await documentService.fetchSecureDocument(url, 'view');
+//       const blobUrl = window.URL.createObjectURL(blob);
+      
+//       // Check file type and handle accordingly
+//       if (blob.type === 'application/pdf') {
+//         // For PDFs, open in new tab
+//         window.open(blobUrl, '_blank');
+//       } else if (blob.type.startsWith('image/')) {
+//         // For images, create a proper viewer
+//         const newWindow = window.open('', '_blank');
+//         newWindow.document.write(`
+//           <!DOCTYPE html>
+//           <html>
+//             <head>
+//               <title>${originalName || filename}</title>
+//               <style>
+//                 body { 
+//                   margin: 0; 
+//                   padding: 20px;
+//                   display: flex; 
+//                   justify-content: center; 
+//                   align-items: center; 
+//                   min-height: 100vh; 
+//                   background: #f5f5f5;
+//                   font-family: Arial, sans-serif;
+//                 }
+//                 .container {
+//                   max-width: 90vw;
+//                   max-height: 90vh;
+//                   text-align: center;
+//                 }
+//                 img { 
+//                   max-width: 100%; 
+//                   max-height: 80vh;
+//                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+//                   border-radius: 8px;
+//                 }
+//                 .filename {
+//                   margin-top: 15px;
+//                   color: #666;
+//                   font-size: 14px;
+//                 }
+//               </style>
+//             </head>
+//             <body>
+//               <div class="container">
+//                 <img src="${blobUrl}" alt="${originalName || filename}" />
+//                 <div class="filename">${originalName || filename}</div>
+//               </div>
+//             </body>
+//           </html>
+//         `);
+//         newWindow.document.close();
+//       } else {
+//         // For other file types, download instead
+//         alert('This file type cannot be viewed in browser. It will be downloaded instead.');
+//         documentService.downloadDocument(userId, filename, originalName);
+//         return;
+//       }
+      
+//       // Clean up after a while
+//       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+      
+//     } catch (error) {
+//       alert('Error viewing document: ' + error.message);
+//     }
+//   },
+
+//   // Download document
+//   downloadDocument: async (userId, filename, originalName = null) => {
+//     try {
+//       const url = `/api/secure-documents/${userId}/${filename}/download`;
+//       const blob = await documentService.fetchSecureDocument(url, 'download');
+//       const blobUrl = window.URL.createObjectURL(blob);
+      
+//       const link = document.createElement('a');
+//       link.href = blobUrl;
+//       link.download = originalName || filename;
+//       document.body.appendChild(link);
+//       link.click();
+//       document.body.removeChild(link);
+      
+//       // Clean up
+//       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+      
+//     } catch (error) {
+//       alert('Error downloading document: ' + error.message);
+//     }
+//   },
+// };
+
+// export default documentService;
+
+import axios from "axios"
+import {
+    AlertCircle,
+    BadgeCheck,
+    Building,
+    CheckCircle,
+    Clock,
+    Download,
+    Eye,
+    FileText,
+    Mail,
+    MoreVertical,
+    Search,
+    Shield,
+    XCircle
+} from "lucide-react"
+import { useEffect, useState } from "react"
+
+const OrganizerManagement = () => {
+  const [organizers, setOrganizers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [filters, setFilters] = useState({
+    search: "",
+    status: ""
+  })
+  const [searchInput, setSearchInput] = useState("")
+
+  const [selectedOrganizer, setSelectedOrganizer] = useState(null)
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [showDocumentsModal, setShowDocumentsModal] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState("")
+  const [verificationNotes, setVerificationNotes] = useState("")
+
+  // Secure document handling functions
+  const handleSecureViewDocument = async (userId, filename, originalName = null) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const url = `/api/secure-documents/${userId}/${filename}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to view document: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Handle different file types
+      if (blob.type === 'application/pdf') {
+        window.open(blobUrl, '_blank');
+      } else if (blob.type.startsWith('image/')) {
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${originalName || filename}</title>
+              <style>
+                body { 
+                  margin: 0; 
+                  padding: 20px;
+                  display: flex; 
+                  justify-content: center; 
+                  align-items: center; 
+                  min-height: 100vh; 
+                  background: #f5f5f5;
+                  font-family: Arial, sans-serif;
+                }
+                .container {
+                  max-width: 90vw;
+                  max-height: 90vh;
+                  text-align: center;
+                }
+                img { 
+                  max-width: 100%; 
+                  max-height: 80vh;
+                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                  border-radius: 8px;
+                }
+                .filename {
+                  margin-top: 15px;
+                  color: #666;
+                  font-size: 14px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <img src="${blobUrl}" alt="${originalName || filename}" />
+                <div class="filename">${originalName || filename}</div>
+              </div>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
+      } else {
+        alert('This file type cannot be viewed in browser. Downloading instead.');
+        handleSecureDownloadDocument(userId, filename, originalName);
+        return;
+      }
+      
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } catch (error) {
+      console.error('Error viewing document:', error);
+      alert('Error viewing document: ' + error.message);
+    }
+  };
+
+  const handleSecureDownloadDocument = async (userId, filename, originalName = null) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const url = `/api/secure-documents/${userId}/${filename}/download`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download document: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = originalName || filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      alert('Error downloading document: ' + error.message);
+    }
+  };
+
+  // Fetch organizers from API
+  const fetchOrganizers = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('auth_token')
+      
+      // Create params object without empty values
+      const params = {}
+      if (filters.search && filters.search.trim() !== '') {
+        params.search = filters.search
+      }
+      if (filters.status && filters.status.trim() !== '') {
+        params.status = filters.status
+      }
+      
+      const response = await axios.get('/api/admin/get-organizers', {
+        params: params,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.data.status) {
+        // Transform API data to match frontend structure
+        const transformedOrganizers = response.data.data.map(org => ({
+          id: org._id || org.id,
+          name: org.organization_name,
+          email: org.email,
+          phone: org.phone,
+          status: org.status,
+          events: 0,
+          joined: new Date(org.created_at).toISOString().split('T')[0],
+          rating: null,
+          address: `${org.city}, ${org.country}`,
+          documents: org.kyc_document_path ? [
+            { 
+              name: org.kyc_document_original_name || "kyc_document.pdf", 
+              type: "kyc", 
+              verified: org.status === 'verified',
+              path: org.kyc_document_path,
+              filename: org.kyc_document_path.split('/').pop(),
+              userId: org._id || org.id
+            }
+          ] : [],
+          verification: getVerificationData(org)
+        }))
+
+        setOrganizers(transformedOrganizers)
+      }
+    } catch (err) {
+      setError('Failed to fetch organizers')
+      console.error('Error fetching organizers:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Helper function to generate verification data based on status
+  const getVerificationData = (org) => {
+    const baseData = {
+      level: "basic",
+      score: org.status === 'verified' ? 95 : org.status === 'pending' ? 65 : 45,
+      steps: [
+        { step: "Document Review", status: "pending", date: null },
+        { step: "Background Check", status: "pending", date: null },
+        { step: "Final Approval", status: "pending", date: null }
+      ]
+    }
+
+    switch (org.status) {
+      case 'verified':
+        return {
+          ...baseData,
+          status: "verified",
+          verifiedBy: "Admin User",
+          verifiedAt: new Date(org.updated_at).toISOString().split('T')[0],
+          steps: [
+            { step: "Document Review", status: "completed", date: new Date(org.created_at).toISOString().split('T')[0] },
+            { step: "Background Check", status: "completed", date: new Date(org.updated_at).toISOString().split('T')[0] },
+            { step: "Final Approval", status: "completed", date: new Date(org.updated_at).toISOString().split('T')[0] }
+          ]
+        }
+      case 'pending':
+        return {
+          ...baseData,
+          status: "pending_verification",
+          verifiedBy: null,
+          verifiedAt: null
+        }
+      default:
+        return baseData
+    }
+  }
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchInput }))
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchInput])
+
+  useEffect(() => {
+    fetchOrganizers()
+  }, [filters])
+
+  const handleSearchChange = (value) => {
+    setSearchInput(value)
+  }
+
+  const handleStatusFilter = (status) => {
+    setFilters(prev => ({ ...prev, status: status || "" }))
+  }
+
+  const clearFilters = () => {
+    setSearchInput("")
+    setFilters({ search: "", status: "" })
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'verified':
+        return <BadgeCheck className="h-4 w-4 text-green-500" />
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-500" />
+      case 'under_review':
+        return <Shield className="h-4 w-4 text-blue-500" />
+      case 'rejected':
+        return <XCircle className="h-4 w-4 text-red-500" />
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />
+    }
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'verified':
+        return 'bg-green-100 text-green-800'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'under_review':
+        return 'bg-blue-100 text-blue-800'
+      case 'rejected':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'verified':
+        return 'Verified'
+      case 'pending':
+        return 'Pending Verification'
+      case 'under_review':
+        return 'Under Review'
+      case 'rejected':
+        return 'Rejected'
+      default:
+        return status
+    }
+  }
+
+  const getVerificationLevelColor = (level) => {
+    switch (level) {
+      case 'premium':
+        return 'bg-purple-100 text-purple-800'
+      case 'standard':
+        return 'bg-blue-100 text-blue-800'
+      case 'basic':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStepStatusIcon = (stepStatus) => {
+    switch (stepStatus) {
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case 'in_progress':
+        return <Clock className="h-4 w-4 text-blue-500" />
+      case 'failed':
+        return <XCircle className="h-4 w-4 text-red-500" />
+      case 'pending':
+        return <Clock className="h-4 w-4 text-gray-400" />
+      case 'cancelled':
+        return <XCircle className="h-4 w-4 text-gray-400" />
+      default:
+        return <Clock className="h-4 w-4 text-gray-400" />
+    }
+  }
+
+  const handleVerify = async (organizerId) => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      await axios.post(`/api/admin/organizers/${organizerId}/verify`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      // Update local state
+      setOrganizers(orgs => 
+        orgs.map(org => 
+          org.id === organizerId 
+            ? { 
+                ...org, 
+                status: 'verified',
+                verification: {
+                  ...org.verification,
+                  status: 'verified',
+                  verifiedBy: 'Admin User',
+                  verifiedAt: new Date().toISOString().split('T')[0],
+                  steps: org.verification.steps.map(step => 
+                    step.status === 'in_progress' ? { ...step, status: 'completed', date: new Date().toISOString().split('T')[0] } : step
+                  )
+                }
+              }
+            : org
+        )
+      )
+      setShowVerificationModal(false)
+    } catch (err) {
+      setError('Failed to verify organizer')
+      console.error('Error verifying organizer:', err)
+    }
+  }
+
+  const handleReject = async (organizerId) => {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a rejection reason')
+      return
+    }
+    
+    try {
+      const token = localStorage.getItem('auth_token')
+      await axios.post(`/api/admin/organizers/${organizerId}/reject`, {
+        reason: rejectionReason
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      setOrganizers(orgs => 
+        orgs.map(org => 
+          org.id === organizerId 
+            ? { 
+                ...org, 
+                status: 'rejected',
+                verification: {
+                  ...org.verification,
+                  status: 'rejected',
+                  verifiedBy: 'Admin User',
+                  verifiedAt: new Date().toISOString().split('T')[0],
+                  rejectionReason,
+                  steps: org.verification.steps.map(step => 
+                    step.status === 'in_progress' ? { ...step, status: 'failed', date: new Date().toISOString().split('T')[0] } : 
+                    step.status === 'pending' ? { ...step, status: 'cancelled' } : step
+                  )
+                }
+              }
+            : org
+        )
+      )
+      setShowVerificationModal(false)
+      setRejectionReason("")
+    } catch (err) {
+      setError('Failed to reject organizer')
+      console.error('Error rejecting organizer:', err)
+    }
+  }
+
+  const handleStartVerification = async (organizerId) => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      await axios.post(`/api/admin/organizers/${organizerId}/start-verification`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      setOrganizers(orgs => 
+        orgs.map(org => 
+          org.id === organizerId 
+            ? { 
+                ...org, 
+                status: 'under_review',
+                verification: {
+                  ...org.verification,
+                  status: 'in_progress',
+                  steps: org.verification.steps.map((step, index) => 
+                    index === 0 ? { ...step, status: 'in_progress', date: new Date().toISOString().split('T')[0] } : step
+                  )
+                }
+              }
+            : org
+        )
+      )
+    } catch (err) {
+      setError('Failed to start verification')
+      console.error('Error starting verification:', err)
+    }
+  }
+
+  const handleDocumentVerification = async (organizerId, docIndex) => {
+    // You might want to implement this with an API call
+    setOrganizers(orgs => 
+      orgs.map(org => 
+        org.id === organizerId 
+          ? {
+              ...org,
+              documents: org.documents.map((doc, idx) => 
+                idx === docIndex ? { ...doc, verified: !doc.verified } : doc
+              )
+            }
+          : org
+      )
+    )
+  }
+
+  const openVerificationModal = (organizer) => {
+    setSelectedOrganizer(organizer)
+    setShowVerificationModal(true)
+  }
+
+  const openDocumentsModal = (organizer) => {
+    setSelectedOrganizer(organizer)
+    setShowDocumentsModal(true)
+  }
+
+  const stats = {
+    total: organizers.length,
+    verified: organizers.filter(org => org.status === 'verified').length,
+    pending: organizers.filter(org => org.status === 'pending').length,
+    underReview: organizers.filter(org => org.status === 'under_review').length,
+    rejected: organizers.filter(org => org.status === 'rejected').length
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg text-gray-600">Loading organizers...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg text-red-600">{error}</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Organizer Management</h1>
+          <p className="text-gray-600">Verify and manage event organizers</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+            Export Data
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-sm text-gray-600">Total Organizers</p>
+          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-sm text-gray-600">Verified</p>
+          <p className="text-2xl font-bold text-green-600">{stats.verified}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-sm text-gray-600">Pending</p>
+          <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-sm text-gray-600">Under Review</p>
+          <p className="text-2xl font-bold text-blue-600">{stats.underReview}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-sm text-gray-600">Rejected</p>
+          <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search Organizers
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search by name, email, organization..."
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select 
+              value={filters.status}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <option value="">All Status</option>
+              <option value="verified">Verified</option>
+              <option value="pending">Pending Verification</option>
+              <option value="under_review">Under Review</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          {(filters.search || filters.status) && (
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+
+        {/* Active filters display */}
+        {(filters.search || filters.status) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {filters.search && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                Search: "{filters.search}"
+                <button 
+                  onClick={() => setSearchInput("")}
+                  className="ml-1 hover:bg-blue-200 rounded-full"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {filters.status && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Status: {filters.status}
+                <button 
+                  onClick={() => handleStatusFilter("")}
+                  className="ml-1 hover:bg-green-200 rounded-full"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Results count */}
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-gray-600">
+          Showing {organizers.length} organizers
+          {filters.search && ` matching "${filters.search}"`}
+          {filters.status && ` with status "${filters.status}"`}
+        </p>
+      </div>
+
+      {/* Organizers Table */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Organizer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Verification Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Documents
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact Info
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {organizers.map((org) => (
+                <tr key={org.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <Building className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{org.name}</div>
+                        <div className="text-sm text-gray-500">{org.email}</div>
+                        <div className="text-xs text-gray-400">Joined {org.joined}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center mb-2">
+                      {getStatusIcon(org.status)}
+                      <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(org.status)}`}>
+                        {getStatusText(org.status)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className={`px-2 py-1 rounded-full ${getVerificationLevelColor(org.verification.level)}`}>
+                        {org.verification.level}
+                      </span>
+                      <span className="text-gray-500">Score: {org.verification.score}%</span>
+                    </div>
+                    {org.verification.verifiedAt && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Verified: {org.verification.verifiedAt}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900">
+                      {org.documents.filter(doc => doc.verified).length}/{org.documents.length} Verified
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {org.documents.length} documents submitted
+                    </div>
+                    {org.documents.length > 0 && (
+                      <button 
+                        onClick={() => openDocumentsModal(org)}
+                        className="text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View Documents
+                      </button>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="mb-1">{org.phone}</div>
+                    <div className="text-xs text-gray-400">{org.address}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center space-x-2">
+                      {org.status === 'pending' && (
+                        <button 
+                          onClick={() => handleStartVerification(org.id)}
+                          className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
+                          title="Start Verification"
+                        >
+                          <Shield className="h-4 w-4" />
+                        </button>
+                      )}
+                      {org.status === 'under_review' && (
+                        <button 
+                          onClick={() => openVerificationModal(org)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
+                          title="Complete Verification"
+                        >
+                          <BadgeCheck className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors">
+                        <Mail className="h-4 w-4" />
+                      </button>
+                      <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors">
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Verification Modal */}
+      {showVerificationModal && selectedOrganizer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Verification Process: {selectedOrganizer.name}
+              </h3>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Verification Steps */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-4">Verification Steps</h4>
+                <div className="space-y-3">
+                  {selectedOrganizer.verification.steps.map((step, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                      <div className="flex items-center">
+                        {getStepStatusIcon(step.status)}
+                        <span className="ml-3 text-sm font-medium text-gray-900">{step.step}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-xs font-medium ${
+                          step.status === 'completed' ? 'text-green-600' :
+                          step.status === 'in_progress' ? 'text-blue-600' :
+                          step.status === 'failed' ? 'text-red-600' : 'text-gray-500'
+                        }`}>
+                          {step.status.replace('_', ' ')}
+                        </div>
+                        {step.date && (
+                          <div className="text-xs text-gray-500">{step.date}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Documents Status */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Documents Status</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedOrganizer.documents.map((doc, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 text-gray-400 mr-3" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{doc.name}</div>
+                          <div className="text-xs text-gray-500 capitalize">{doc.type}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {doc.verified ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-yellow-500" />
+                        )}
+                        <button 
+                          onClick={() => handleDocumentVerification(selectedOrganizer.id, index)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          {doc.verified ? 'Unverify' : 'Verify'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Verification Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Verification Notes
+                </label>
+                <textarea
+                  value={verificationNotes}
+                  onChange={(e) => setVerificationNotes(e.target.value)}
+                  placeholder="Add notes about this verification..."
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  rows="3"
+                />
+              </div>
+
+              {/* Rejection Reason (if applicable) */}
+              {selectedOrganizer.verification.status === 'in_progress' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rejection Reason (if rejecting):
+                  </label>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Provide detailed reason for rejection..."
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    rows="3"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              
+              {selectedOrganizer.verification.status === 'in_progress' && (
+                <>
+                  <button
+                    onClick={() => handleReject(selectedOrganizer.id)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Reject Application
+                  </button>
+                  <button
+                    onClick={() => handleVerify(selectedOrganizer.id)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Approve & Verify
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Documents Modal with Secure Access */}
+      {showDocumentsModal && selectedOrganizer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Documents: {selectedOrganizer.name}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Secure document access - Files are encrypted and require authentication
+              </p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                {selectedOrganizer.documents.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{doc.name}</div>
+                        <div className="text-xs text-gray-500 capitalize">{doc.type} Document</div>
+                        <div className="text-xs text-gray-400">Secure • Encrypted</div>
+                        <div className="flex items-center mt-1">
+                          {doc.verified ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {/* Secure View Button */}
+                      <button 
+                        onClick={() => handleSecureViewDocument(
+                          doc.userId || selectedOrganizer.id, 
+                          doc.filename, 
+                          doc.name
+                        )}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="View Document Securely"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      
+                      {/* Secure Download Button */}
+                      <button 
+                        onClick={() => handleSecureDownloadDocument(
+                          doc.userId || selectedOrganizer.id, 
+                          doc.filename, 
+                          doc.name
+                        )}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                        title="Download Document Securely"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                      
+                      {/* Verify/Unverify Button */}
+                      <button 
+                        onClick={() => handleDocumentVerification(selectedOrganizer.id, index)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          doc.verified 
+                            ? 'text-green-600 hover:bg-green-50' 
+                            : 'text-yellow-600 hover:bg-yellow-50'
+                        }`}
+                        title={doc.verified ? 'Mark as unverified' : 'Mark as verified'}
+                      >
+                        {doc.verified ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Show message if no documents */}
+              {selectedOrganizer.documents.length === 0 && (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No documents submitted</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowDocumentsModal(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default OrganizerManagement

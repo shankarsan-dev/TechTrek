@@ -281,7 +281,7 @@ createEvent: async (formData) => {
       throw error;
     }
   },
-  getAllUsers: async ({ search = "", status = "", page = 1 } = {}) => {
+  getAllUsers: async ({ search = "", status = "", page = 1, } = {}) => {
   try {
     const response = await api.get("/admin/get-users", {
       params: { search, status, page },
@@ -299,5 +299,14 @@ createEvent: async (formData) => {
     throw new Error(errorMessage);
   }
 },
+  // getOrganizers: (params = {}) => api.get("/admin/organizers", { params }),
+  // verifyOrganizer: (id) => api.post(`/admin/organizers/${id}/verify`),
+  // rejectOrganizer: (id, reason) => api.post(`/admin/organizers/${id}/reject`, { reason }),
+  getAll: () => api.get("/organizers"),
+  verify: (id, notes) => api.post(`/organizers/${id}/verify`, { notes }),
+  reject: (id, reason) => api.post(`/organizers/${id}/reject`, { reason }),
+  toggleDocumentVerification: (organizerId, documentId) =>
+    api.post(`/organizers/${organizerId}/documents/${documentId}/toggle`),
 };
+
 

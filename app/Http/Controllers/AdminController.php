@@ -129,6 +129,95 @@ class AdminController extends Controller
         'data' => $query,
     ]);
 }
+
+//   public function organizers()
+//     {
+//          $admin = auth()->user();
+//      if ($admin->role !== 'admin') {
+//        return response()->json(['message' => 'Unauthorized'], 403);
+//     }
+//     else{
+//         $organizers = User::where('role', 'organizer')
+//             ->select('id', 'name', 'email', 'phone', 'organization_name', 'kyc_document_path', 'status', 'created_at')
+//             ->orderBy('created_at', 'desc')
+//             ->get();
+
+//         return response()->json([
+//             'success' => true,
+//             'data' => $organizers
+//         ]);}
+//     }
+
+     // Approve organizer
+    public function approve($id)
+    {
+        $organizer = User::findOrFail($id);
+
+        $organizer->status = 'verified';
+        $organizer->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Organizer verified successfully.',
+        ]);
+    }
+
+    // Reject organizer
+    public function reject(Request $request, $id)
+    {
+        $organizer = User::findOrFail($id);
+
+        $organizer->status = 'rejected';
+        $organizer->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Organizer rejected successfully.',
+        ]);
+    }
+
+    // Cancel organizer
+    public function cancel($id)
+    {
+        $organizer = User::findOrFail($id);
+
+        $organizer->status = 'cancelled';
+        $organizer->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Organizer status set to cancelled.',
+        ]);
+    }
+// public function organizers(Request $request)
+// {
+//     $admin = auth()->user();
+//     if ($admin->role !== 'admin') {
+//         return response()->json(['message' => 'Unauthorized'], 403);
+//     }
+
+//     $query = User::where('role', 'organizer');
+
+//     if ($request->has('status')) {
+//         $query->where('status', $request->status);
+//     }
+
+//     if ($request->has('search')) {
+//         $search = $request->search;
+//         $query->where(function ($q) use ($search) {
+//             $q->where('name', 'LIKE', "%$search%")
+//               ->orWhere('organization_name', 'LIKE', "%$search%");
+//         });
+//     }
+
+//     $organizers = $query->paginate(20);
+
+//     return response()->json([
+//         'status' => true,
+//         'total' => $organizers->total(),
+//         'data' => $organizers->items(),
+//     ]);
+// }
 public function organizers(Request $request)
 {
     $admin = auth()->user();
@@ -138,15 +227,18 @@ public function organizers(Request $request)
 
     $query = User::where('role', 'organizer');
 
-    if ($request->has('status')) {
+    // Only apply status filter if it's not empty
+    if ($request->has('status') && !empty($request->status) && $request->status !== '') {
         $query->where('status', $request->status);
     }
 
-    if ($request->has('search')) {
+    // Only apply search filter if it's not empty
+    if ($request->has('search') && !empty($request->search) && $request->search !== '') {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
             $q->where('name', 'LIKE', "%$search%")
-              ->orWhere('organization_name', 'LIKE', "%$search%");
+              ->orWhere('organization_name', 'LIKE', "%$search%")
+              ->orWhere('email', 'LIKE', "%$search%");
         });
     }
 
