@@ -276,4 +276,58 @@ public function normalUsers(Request $request)
     ]);
 }
 
+// public function updateOrganizerStatus(Request $request, $id)
+// {
+//     $admin = auth()->user();
+//     if ($admin->role !== 'admin') {
+//         return response()->json(['message' => 'Unauthorized'], 403);
+//     }
+
+//     $organizer = User::find($id);
+//     if (!$organizer || $organizer->role !== 'organizer') {
+//         return response()->json(['message' => 'Organizer not found'], 404);
+//     }
+
+//     $validated = $request->validate([
+//         'status' => 'required|in:pending,verified,suspended',
+//     ]);
+
+//     $organizer->status = $validated['status'];
+//     $organizer->save();
+
+//     return response()->json([
+//         'status' => true,
+//         'message' => 'Organizer status updated successfully',
+//         'data' => $organizer,
+//     ]);
+// }
+public function updateOrganizerStatus(Request $request)
+{
+    $admin = auth()->user();
+    if ($admin->role !== 'admin') {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    $validated = $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'status' => 'required|in:pending,verified,suspended,rejected'
+    ]);
+
+    $organizer = User::where('id', $validated['user_id'])
+                    ->where('role', 'organizer')
+                    ->first();
+
+    if (!$organizer) {
+        return response()->json(['message' => 'Organizer not found'], 404);
+    }
+
+    $organizer->status = $validated['status'];
+    $organizer->save();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Organizer status updated successfully',
+        'data' => $organizer,
+    ]);
+}
 }

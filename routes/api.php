@@ -10,6 +10,7 @@ use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\AttendeesController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\NotificationController;    
 
 /*
 
@@ -67,9 +68,9 @@ Route::get('/admin/get-organizers', [AdminController::class, 'organizers']);
 
 Route::get('/admin/users/normal', [AdminController::class, 'normalUsers']);
 
-Route::post('/admin/organizers/{id}/approve', [AdminController::class, 'approve']);
-    Route::post('/admin/organizers/{id}/reject', [AdminController::class, 'reject']);
-    Route::post('/admin/organizers/{id}/cancel', [AdminController::class, 'cancel']);
+Route::post('/admin/approve', [AdminController::class, 'updateOrganizerStatus']);
+    // Route::post('/admin/organizers/{id}/reject', [AdminController::class, 'reject']);
+    // Route::post('/admin/organizers/{id}/cancel', [AdminController::class, 'cancel']);
 
 });
 
