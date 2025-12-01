@@ -48,12 +48,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user/preferences', [UserPreferenceController::class, 'getUserPreferences']);
     Route::get('/recommended-events', [EventController::class, 'recommendedEvents']);
     Route::get("/top-tags", [EventController::class, "topTags"]);
+      Route::post("/bookings",[BookingController::class,"store"]);
+      Route::put("/bookings/{id}/cancel",[BookingController::class,"cancelBooking"]);
     // Organizer-specific routes
         Route::post('/events', [EventController::class, 'store']);
-        Route::get('/organizer/events', [EventController::class, 'organizerEvents']); Route::get('/organizer/events/{id}', [EventController::class, 'showOrganizerEvent']);
-        Route::put('/organizer/events/{slug}', [EventController::class, 'update']);
-        Route::delete('/organizer/events/{slug}', [EventController::class, 'destroy']);
-        
+        Route::get('/organizer/events', [EventController::class, 'organizerEvents']);
+         Route::get('/organizer/events/{id}', [EventController::class, 'showOrganizerEvent']);
+    
+      
 
 
 //Admin-specific routes

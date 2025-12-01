@@ -538,36 +538,34 @@
 //     </div>
 //   )
 // }
+"use client"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  CheckCircle,
+  Clock,
+  Download,
+  Mail,
+  MoreVertical,
+  XCircle
+} from "lucide-react"
+import { QRCodeCanvas } from "qrcode.react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "../components/Layout/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/layout/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import { bookingService } from "../services/bookingService"
 
-export default function Bookings() {
+const Bookings = () => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const [selectedBookings, setSelectedBookings] = useState([])
+  const [selectedQR, setSelectedQR] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
 
-  const [selectedEvent, setSelectedEvent] = useState("all")
-  const [selectedStatus, setSelectedStatus] = useState("all")
-
-  // Fetch events for the dropdown
-  const { data: events = [] } = useQuery({
-    queryKey: ["events"],
-    queryFn: bookingService.getOrganizerEvents, // new API to get events of logged-in organizer
-  })
-
-  // Fetch bookings based on filters
+  // Fetch bookings
   const { data: bookings = [], isLoading, isError } = useQuery({
-    queryKey: ["bookings", selectedEvent, selectedStatus],
-    queryFn: () =>
-      bookingService.getOrganizerBookings({
-        event_id: selectedEvent,
-        status: selectedStatus,
-      }),
-    keepPreviousData: true,
+    queryKey: ["bookings"],
+    queryFn: bookingService.getUserBookings,
   })
 
   // Cancel booking mutation
@@ -576,105 +574,241 @@ export default function Bookings() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookings"] }),
   })
 
-  // Event filter handler
-  const handleEventChange = (e) => {
-    setSelectedEvent(e.target.value)
+  // Status badge
+  const getStatusBadge = (status) => {
+    const styles = {
+      Active: "bg-yellow-100 text-yellow-800",
+      Cancelled: "bg-red-100 text-red-800",
+      Checked_in: "bg-green-100 text-green-800",
+    }
+    const icons = {
+      Active: Clock,
+      Cancelled: XCircle,
+      Checked_in: CheckCircle,
+    }
+    const Icon = icons[status]
+    return (
+      <span
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}
+      >
+        <Icon className="h-3 w-3 mr-1" />
+        {status}
+      </span>
+    )
   }
 
-  // Status filter handler
-  const handleStatusChange = (e) => {
-    setSelectedStatus(e.target.value)
+  // Handle selection
+  const handleSelectBooking = (id) => {
+    setSelectedBookings((prev) =>
+      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]
+    )
+  }
+  const handleSelectAll = () => {
+    if (selectedBookings.length === filteredBookings.length) {
+      setSelectedBookings([])
+    } else {
+      setSelectedBookings(filteredBookings.map((b) => b.id))
+    }
+  }
+
+  // Filter bookings
+  const filteredBookings = bookings.filter((b) => {
+    const matchesSearch =
+      b.eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.ticketType.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "all" || b.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
+
+  // QR download
+  const handleDownloadQR = (bookingId) => {
+    const canvas = document.getElementById(`qr-${bookingId}`)
+    const pngUrl = canvas.toDataURL("image/png")
+    const link = document.createElement("a")
+    link.href = pngUrl
+    link.download = `booking_${bookingId}_qr.png`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // Actions menu per row
+  const BookingRow = ({ booking }) => {
+    const [showMenu, setShowMenu] = useState(false)
+    return (
+      <tr className="hover:bg-gray-50">
+        <td className="px-6 py-4">
+          <input
+            type="checkbox"
+            checked={selectedBookings.includes(booking.id)}
+            onChange={() => handleSelectBooking(booking.id)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+        </td>
+        <td className="px-6 py-4">
+          <div className="text-sm font-medium text-gray-900">{booking.eventName}</div>
+          <div className="text-sm text-gray-500">{booking.ticketType}</div>
+        </td>
+        <td className="px-6 py-4">{new Date(booking.date).toLocaleDateString()}</td>
+        <td className="px-6 py-4">{booking.time}</td>
+        <td className="px-6 py-4">{booking.location}</td>
+        <td className="px-6 py-4">${booking.totalPrice}</td>
+        <td className="px-6 py-4">{getStatusBadge(booking.status)}</td>
+        <td className="px-6 py-4 text-right relative">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg py-1 z-10">
+              <button
+                onClick={() => navigate(`/events/${booking.event_id}`)}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                View Event
+              </button>
+              <button
+                onClick={() => setSelectedQR(booking)}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                Show QR
+              </button>
+              {booking.status === "Active" && (
+                <button
+                  onClick={() => cancelMutation.mutate(booking.id)}
+                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  Cancel Booking
+                </button>
+              )}
+            </div>
+          )}
+        </td>
+      </tr>
+    )
   }
 
   if (isLoading) return <p>Loading bookings...</p>
-  if (isError) return <p className="text-red-500">Failed to load bookings</p>
+  if (isError) return <p className="text-red-500">Failed to load bookings.</p>
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto p-6">
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="flex flex-col gap-4">
-          <CardTitle className="text-3xl font-bold">My Bookings</CardTitle>
-
-          {/* Filters */}
-          <div className="flex gap-4">
-            <select
-              className="border rounded px-3 py-1"
-              value={selectedEvent}
-              onChange={handleEventChange}
-            >
-              <option value="all">All Events</option>
-              {events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.title}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="border rounded px-3 py-1"
-              value={selectedStatus}
-              onChange={handleStatusChange}
-            >
-              <option value="all">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Cancelled">Cancelled</option>
-              <option value="Checked_in">Checked In</option>
-            </select>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Filters and actions */}
+        <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4">
+          <input
+            type="text"
+            placeholder="Search bookings..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Checked_in">Checked In</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <div className="flex gap-3">
+            <Button onClick={() => console.log("Export selected")}>
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+            {selectedBookings.length > 0 && (
+              <Button onClick={() => console.log("Email selected")}>
+                <Mail className="h-4 w-4 mr-1" />
+                Email Selected ({selectedBookings.length})
+              </Button>
+            )}
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="overflow-x-auto">
-          {bookings.length === 0 ? (
-            <p className="text-center text-gray-500">No bookings found.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Event Name</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Ticket Type</TableHead>
-                  <TableHead>Total Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell>{booking.eventName}</TableCell>
-                    <TableCell>{booking.date}</TableCell>
-                    <TableCell>{booking.time}</TableCell>
-                    <TableCell>{booking.location}</TableCell>
-                    <TableCell>{booking.ticketType}</TableCell>
-                    <TableCell>{booking.totalPrice}</TableCell>
-                    <TableCell>{booking.status}</TableCell>
-                    <TableCell className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/events/${booking.event_id}`)}
-                      >
-                        View Event
-                      </Button>
-                      {booking.status === "Active" && (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => cancelMutation.mutate(booking.id)}
-                        >
-                          Cancel
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
+        {/* Bookings Table */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedBookings.length === filteredBookings.length &&
+                        filteredBookings.length > 0
+                      }
+                      onChange={handleSelectAll}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Event
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Total Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredBookings.map((booking) => (
+                  <BookingRow key={booking.id} booking={booking} />
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
+          </div>
+          {filteredBookings.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              No bookings found.
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* QR Modal */}
+      {selectedQR && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full text-center relative">
+            <h2 className="text-xl font-semibold mb-4">{selectedQR.eventName} QR Code</h2>
+            <QRCodeCanvas
+              id={`qr-${selectedQR.id}`}
+              value={selectedQR.qr_code || "No QR data"}
+              size={220}
+              level="H"
+              includeMargin
+            />
+            <div className="mt-5 flex justify-center gap-3">
+              <Button variant="outline" onClick={() => handleDownloadQR(selectedQR.id)}>
+                Download
+              </Button>
+              <Button variant="secondary" onClick={() => setSelectedQR(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+export default Bookings

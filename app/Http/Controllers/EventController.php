@@ -490,6 +490,73 @@ public function showOrganizerEvent($id)
 // }
 
 
+// public function showEvent($id)
+// {
+//     $event = Event::with(['category', 'tickets'])->where('_id', $id)->first();
+
+//     if (!$event) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Event not found',
+//         ], 404);
+//     }
+
+    
+// // Update user preference with score increment
+// if (auth()->user() && !empty($event->tags)) {
+//     $userId = auth()->id();
+//     $interactionType = 'view';
+
+//     foreach ($event->tags as $tag) {
+//         $pref = UserPreference::firstOrNew([
+//             'user_id' => $userId,
+//             'event_id' => $event->_id,
+//             'tag' => $tag,
+//             'interaction_type' => $interactionType,
+//             'score' => 1,
+//         ]);
+
+//         // Increment score
+//         // $pref->score = ($pref->score ?? 0) + 1;
+//         $pref->save();
+//     }
+// }
+
+
+//     $bookedCount = $event->tickets ? $event->tickets->sum('sold') : 0;
+
+//     $responseData = [
+//         'id'             => $event->_id,
+//         'title'          => $event->title,
+//         'description'    => $event->description,
+//         'category'       => $event->category ? [
+//             'id'   => $event->category->_id ?? $event->category->id,
+//             'name' => $event->category->name,
+//         ] : null,
+//         'start_date'     => $event->start_date,
+//         'end_date'       => $event->end_date,
+//         'start_time'     => $event->start_time,
+//         'end_time'       => $event->end_time,
+//         'venue_name'     => $event->venue_name,
+//         'location'       => $event->location,
+//         'address'        => $event->address,
+//         'capacity'       => $event->capacity,
+//         'featured_image' => $event->featured_image,
+//         'agenda'         => $event->agenda ?? [],
+//         'speakers'       => $event->speakers ?? [],
+//         'tags'           => $event->tags ?? [],
+//         'tickets'        => $event->tickets ?? [],
+//         'booked_count'   => $bookedCount,
+//         'organizer_id'   => $event->organizer_id,
+//         'created_at'     => $event->created_at,
+//         'updated_at'     => $event->updated_at,
+//     ];
+
+//     return response()->json([
+//         'success' => true,
+//         'data'    => $responseData,
+//     ]);
+// }
 public function showEvent($id)
 {
     $event = Event::with(['category', 'tickets'])->where('_id', $id)->first();
@@ -501,27 +568,13 @@ public function showEvent($id)
         ], 404);
     }
 
-    
-// Update user preference with score increment
-if (auth()->user() && !empty($event->tags)) {
-    $userId = auth()->id();
-    $interactionType = 'view';
+    // Increment user tag scores for 'view'
+    if (auth()->check() && !empty($event->tags)) {
+        $userId = auth()->id();
 
-    foreach ($event->tags as $tag) {
-        $pref = UserPreference::firstOrNew([
-            'user_id' => $userId,
-            'event_id' => $event->_id,
-            'tag' => $tag,
-            'interaction_type' => $interactionType,
-            'score' => 1,
-        ]);
-
-        // Increment score
-        // $pref->score = ($pref->score ?? 0) + 1;
-        $pref->save();
+        // Increment all tags by 1 for a view
+        UserPreference::incrementTags($userId, $event->tags, 'view', 1);
     }
-}
-
 
     $bookedCount = $event->tickets ? $event->tickets->sum('sold') : 0;
 
@@ -1011,10 +1064,105 @@ public function upcomingEvents(Request $request)
 //         'data' => $recommendedEvents
 //     ]);
 // }
+// public function recommendedEvents(Request $request)
+// {
+//     $user = auth()->user();
+
+//     if (!$user) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Unauthorized'
+//         ], 401);
+//     }
+
+//     // Optional limit parameter
+//     $limit = intval($request->get('limit', 10));
+
+//     // Step 1: Get user preference scores
+//     $tagScores = UserPreference::where('user_id', $user->_id)
+//         ->where('interaction_type', 'view') // can include other types if needed
+//         ->get()
+//         ->groupBy('tag')
+//         ->map(fn($items) => $items->sum('score'));
+
+//     if ($tagScores->isEmpty()) {
+//         return response()->json([
+//             'success' => true,
+//             'data' => [],
+//             'message' => 'No preferences found yet'
+//         ]);
+//     }
+
+//     // Convert Collection to array to avoid array_keys() errors
+//     $tagScoresArray = $tagScores->toArray();
+
+//     // Step 2: Compute recommendation score for each event
+//     $events = Event::all()->map(function ($event) use ($tagScoresArray) {
+//         $eventTags = is_string($event->tags)
+//             ? json_decode($event->tags, true)
+//             : $event->tags;
+
+//         $eventScore = 0;
+//         if (is_array($eventTags)) {
+//             foreach ($eventTags as $tag) {
+//                 $eventScore += $tagScoresArray[$tag] ?? 0;
+//             }
+//         }
+
+//         $event->recommendation_score = $eventScore;
+//         return $event;
+//     });
+
+//     // Step 3: Find max score for normalization
+//     $maxScore = $events->max('recommendation_score') ?: 1;
+
+//     // Step 4: Calculate match percentage
+//     $events = $events->map(function ($event) use ($maxScore) {
+//         $event->match_percentage = round(($event->recommendation_score / $maxScore) * 100);
+//         return $event;
+//     });
+
+//     // Step 5: Sort by match percentage descending and limit results
+//     $recommendedEvents = $events->sortByDesc('match_percentage')->take($limit)->values();
+
+//     return response()->json([
+//         'success' => true,
+//         'data' => $recommendedEvents
+//     ]);
+// }
+
+// public function topTags(Request $request)
+// {
+//     $userId = auth()->id();
+
+//     if (!$userId) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Unauthenticated',
+//         ], 401);
+//     }
+
+//     // MongoDB aggregation to sum scores per tag
+//     $topTags = UserPreference::raw(function($collection) use ($userId) {
+//         return $collection->aggregate([
+//             ['$match' => ['user_id' => $userId]],
+//             ['$group' => [
+//                 '_id' => '$tag',
+//                 'total_score' => ['$sum' => '$score']
+//             ]],
+//             ['$sort' => ['total_score' => -1]],
+//             ['$limit' => 10]
+//         ]);
+//     });
+
+//     return response()->json([
+//         'success' => true,
+//         'data' => iterator_to_array($topTags),
+//     ]);
+// }
 public function recommendedEvents(Request $request)
 {
     $user = auth()->user();
-
     if (!$user) {
         return response()->json([
             'success' => false,
@@ -1022,17 +1170,12 @@ public function recommendedEvents(Request $request)
         ], 401);
     }
 
-    // Optional limit parameter
     $limit = intval($request->get('limit', 10));
 
-    // Step 1: Get user preference scores
-    $tagScores = UserPreference::where('user_id', $user->_id)
-        ->where('interaction_type', 'view') // can include other types if needed
-        ->get()
-        ->groupBy('tag')
-        ->map(fn($items) => $items->sum('score'));
+    // Fetch the user's tag scores (combine all interaction types or pick one)
+    $preferences = UserPreference::where('user_id', $user->_id)->get();
 
-    if ($tagScores->isEmpty()) {
+    if ($preferences->isEmpty()) {
         return response()->json([
             'success' => true,
             'data' => [],
@@ -1040,71 +1183,49 @@ public function recommendedEvents(Request $request)
         ]);
     }
 
-    // Convert Collection to array to avoid array_keys() errors
-    $tagScoresArray = $tagScores->toArray();
+    // Combine scores from all interaction types
+    $tagScores = [];
+    foreach ($preferences as $pref) {
+        foreach ($pref->tag_scores as $tag => $score) {
+            $tagScores[$tag] = ($tagScores[$tag] ?? 0) + $score;
+        }
+    }
 
-    // Step 2: Compute recommendation score for each event
-    $events = Event::all()->map(function ($event) use ($tagScoresArray) {
-        $eventTags = is_string($event->tags)
-            ? json_decode($event->tags, true)
-            : $event->tags;
+    if (empty($tagScores)) {
+        return response()->json([
+            'success' => true,
+            'data' => [],
+            'message' => 'No preferences found yet'
+        ]);
+    }
 
-        $eventScore = 0;
+    // Fetch all events
+    $events = Event::all()->map(function ($event) use ($tagScores) {
+        $eventTags = is_string($event->tags) ? json_decode($event->tags, true) : $event->tags;
+
+        $score = 0;
         if (is_array($eventTags)) {
             foreach ($eventTags as $tag) {
-                $eventScore += $tagScoresArray[$tag] ?? 0;
+                $score += $tagScores[$tag] ?? 0;
             }
         }
 
-        $event->recommendation_score = $eventScore;
+        $event->recommendation_score = $score;
         return $event;
     });
 
-    // Step 3: Find max score for normalization
+    // Normalize scores to percentage
     $maxScore = $events->max('recommendation_score') ?: 1;
 
-    // Step 4: Calculate match percentage
-    $events = $events->map(function ($event) use ($maxScore) {
-        $event->match_percentage = round(($event->recommendation_score / $maxScore) * 100);
-        return $event;
-    });
-
-    // Step 5: Sort by match percentage descending and limit results
-    $recommendedEvents = $events->sortByDesc('match_percentage')->take($limit)->values();
+    $recommendedEvents = $events
+        ->map(fn($event) => tap($event, fn($e) => $e->match_percentage = round(($e->recommendation_score / $maxScore) * 100)))
+        ->sortByDesc('match_percentage')
+        ->take($limit)
+        ->values();
 
     return response()->json([
         'success' => true,
         'data' => $recommendedEvents
-    ]);
-}
-
-public function topTags(Request $request)
-{
-    $userId = auth()->id();
-
-    if (!$userId) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthenticated',
-        ], 401);
-    }
-
-    // MongoDB aggregation to sum scores per tag
-    $topTags = UserPreference::raw(function($collection) use ($userId) {
-        return $collection->aggregate([
-            ['$match' => ['user_id' => $userId]],
-            ['$group' => [
-                '_id' => '$tag',
-                'total_score' => ['$sum' => '$score']
-            ]],
-            ['$sort' => ['total_score' => -1]],
-            ['$limit' => 10]
-        ]);
-    });
-
-    return response()->json([
-        'success' => true,
-        'data' => iterator_to_array($topTags),
     ]);
 }
 

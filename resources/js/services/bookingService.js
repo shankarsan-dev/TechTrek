@@ -19,4 +19,8 @@
     const response = await api.put(`/bookings/${bookingId}/cancel`);
     return response.data;
   },
+  getOrganizerEvents: async () => {
+    const response = await api.get("/organizer/events"); // adjust endpoint if needed
+    return response.data.events || [];
+  },
   };
