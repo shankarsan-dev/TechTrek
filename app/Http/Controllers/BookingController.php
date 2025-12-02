@@ -139,6 +139,143 @@ public function cancelBooking(Request $request, $id)
     return response()->json(['message' => 'Booking cancelled successfully']);
 }
 
+// public function store(Request $request)
+// {
+//     $request->validate([
+//         'event_id'  => 'required',
+//         'ticket_id' => 'required',
+//         'user_id'   => 'required',
+//         'quantity'  => 'nullable|integer|min:1',
+//     ]);
+
+//     // Create the booking
+//     $booking = Booking::create([
+//         'event_id'   => $request->event_id,
+//         'ticket_id'  => $request->ticket_id,
+//         'user_id'    => $request->user_id,
+//         'quantity'   => $request->quantity ?? 1,
+//         'qr_code'    => Str::uuid()->toString(),
+//         'checked_in' => false,
+//     ]);
+
+//     // Increment sold count for the ticket
+//     Ticket::where('id', $request->ticket_id)->increment('sold', $request->quantity ?? 1);
+
+//     // Increment user tag scores for 'booking' interaction
+//     $event = Event::find($request->event_id);
+//     if ($event && !empty($event->tags)) {
+//         UserPreference::incrementTags($request->user_id, $event->tags, 'booking', 5); // higher weight for booking
+//     }
+
+//     return response()->json([
+//         'success' => true,
+//         'booking' => $booking,
+//     ]);
+// }
+
+// public function store(Request $request)
+// {
+//     $request->validate([
+//         'event_id'  => 'required',
+//         'ticket_id' => 'required',
+//         'user_id'   => 'required',
+//         'quantity'  => 'nullable|integer|min:1',
+//     ]);
+
+//     $quantity = $request->quantity ?? 1;
+
+//     // Get the ticket
+//     $ticket = Ticket::find($request->ticket_id);
+//     if (!$ticket) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Ticket not found',
+//         ], 404);
+//     }
+
+//     $availableSeats = ($ticket->quantity ?? 0) - ($ticket->sold ?? 0);
+
+//     if ($availableSeats < $quantity) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => "Only $availableSeats seats are available for this ticket",
+//         ], 400);
+//     }
+
+//     // Create the booking
+//     $booking = Booking::create([
+//         'event_id'   => $request->event_id,
+//         'ticket_id'  => $request->ticket_id,
+//         'user_id'    => $request->user_id,
+//         'quantity'   => $quantity,
+//         'qr_code'    => Str::uuid()->toString(),
+//         'checked_in' => false,
+//     ]);
+
+//     // Increment sold count for the ticket
+//     $ticket->increment('sold', $quantity);
+
+//     // Increment user tag scores for 'booking' interaction
+//     $event = Event::find($request->event_id);
+//     if ($event && !empty($event->tags)) {
+//         UserPreference::incrementTags($request->user_id, $event->tags, 'booking', 5); // higher weight for booking
+//     }
+
+//     return response()->json([
+//         'success' => true,
+//         'booking' => $booking,
+//     ]);
+// }
+
+//     public function verifyQrCode(Request $request)
+// {
+//     $request->validate([
+//         'qr_code' => 'required|string',
+//     ]);
+//     // Find booking with this QR code and active status
+//     $booking = Booking::with(['user', 'ticket', 'event'])
+//         ->where('qr_code', $request->qr_code)
+//         ->where('status', 'active')
+//         ->first();
+
+//     if (!$booking) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Invalid or inactive ticket.',
+//         ], 404);
+//     }
+
+//     return response()->json([
+//         'success' => true,
+//         'message' => 'Ticket verified successfully.',
+//         'data' => [
+//             'user' => [
+//                 'id' => $booking->user->id,
+//                 'name' => $booking->user->name,
+//                 'email' => $booking->user->email,
+//             ],
+//             'event' => [
+//                 'id' => $booking->event->id,
+//                 'title' => $booking->event->title,
+//                 'location' => $booking->event->location,
+//                 'start_date' => $booking->event->start_date,
+//                 'start_time' => $booking->event->start_time,
+//             ],
+//             'ticket' => [
+//                 'id' => $booking->ticket->id,
+//                 'name' => $booking->ticket->type,
+//                 'price' => $booking->ticket->price,
+//             ],
+//             'booking' => [
+//                 'id' => $booking->id,
+//                 'status' => ucfirst($booking->status),
+//                 'quantity' => $booking->quantity,
+//                 'qr_code' => $booking->qr_code,
+//                 'created_at' => $booking->created_at,
+//             ],
+//         ],
+//     ]);
+// }
 public function store(Request $request)
 {
     $request->validate([
@@ -148,23 +285,53 @@ public function store(Request $request)
         'quantity'  => 'nullable|integer|min:1',
     ]);
 
+    // Get the ticket
+    $ticket = Ticket::find($request->ticket_id);
+    if (!$ticket) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Ticket not found',
+        ], 404);
+    }
+
+    // Determine quantity from request
+    $quantity = $request->quantity ?? 1;
+
+    // Handle free/unlimited tickets (quantity null or empty string)
+    $isUnlimited = is_null($ticket->quantity) || $ticket->quantity === "";
+
+    // Calculate available seats
+    $availableSeats = $isUnlimited
+        ? INF // unlimited
+        : ($ticket->quantity - $ticket->sold);
+
+    if (!$isUnlimited && $availableSeats < $quantity) {
+        return response()->json([
+            'success' => false,
+            'message' => "Only $availableSeats seats are available for this ticket",
+        ], 400);
+    }
+
     // Create the booking
     $booking = Booking::create([
         'event_id'   => $request->event_id,
         'ticket_id'  => $request->ticket_id,
         'user_id'    => $request->user_id,
-        'quantity'   => $request->quantity ?? 1,
+        'quantity'   => $quantity,
         'qr_code'    => Str::uuid()->toString(),
         'checked_in' => false,
+        'status'     => 'active', // ensure booking is active
     ]);
 
-    // Increment sold count for the ticket
-    Ticket::where('id', $request->ticket_id)->increment('sold', $request->quantity ?? 1);
+    // Increment sold count for the ticket if not unlimited
+    if (!$isUnlimited) {
+        $ticket->increment('sold', $quantity);
+    }
 
     // Increment user tag scores for 'booking' interaction
     $event = Event::find($request->event_id);
     if ($event && !empty($event->tags)) {
-        UserPreference::incrementTags($request->user_id, $event->tags, 'booking', 5); // higher weight for booking
+        UserPreference::incrementTags($request->user_id, $event->tags, 'booking', 5);
     }
 
     return response()->json([
@@ -174,7 +341,46 @@ public function store(Request $request)
 }
 
 
-    public function verifyQrCode(Request $request)
+public function checkInBooking(Request $request)
+{
+    $request->validate([
+        'qr_code' => 'required|string',
+    ]);
+
+    $booking = Booking::where('qr_code', $request->qr_code)->first();
+
+    if (!$booking) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Booking not found.',
+        ], 404);
+    }
+
+    if ($booking->status === 'checked_in') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Ticket already checked in.',
+        ], 400);
+    }
+
+    if ($booking->status !== 'active') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Booking is not active or has been cancelled.',
+        ], 400);
+    }
+
+    $booking->status = 'checked_in';
+    $booking->checked_in_at = now(); // optional
+    $booking->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Booking successfully checked in.',
+        'booking' => $booking,
+    ]);
+}
+public function verifyQrCode(Request $request)
 {
     $request->validate([
         'qr_code' => 'required|string',
@@ -221,46 +427,6 @@ public function store(Request $request)
                 'created_at' => $booking->created_at,
             ],
         ],
-    ]);
-}
-
-public function checkInBooking(Request $request)
-{
-    $request->validate([
-        'qr_code' => 'required|string',
-    ]);
-
-    $booking = Booking::where('qr_code', $request->qr_code)->first();
-
-    if (!$booking) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Booking not found.',
-        ], 404);
-    }
-
-    if ($booking->status === 'checked_in') {
-        return response()->json([
-            'success' => false,
-            'message' => 'Ticket already checked in.',
-        ], 400);
-    }
-
-    if ($booking->status !== 'active') {
-        return response()->json([
-            'success' => false,
-            'message' => 'Booking is not active or has been cancelled.',
-        ], 400);
-    }
-
-    $booking->status = 'checked_in';
-    $booking->checked_in_at = now(); // optional
-    $booking->save();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Booking successfully checked in.',
-        'booking' => $booking,
     ]);
 }
 

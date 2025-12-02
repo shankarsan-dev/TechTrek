@@ -71,22 +71,22 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Categories</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/events?category=ai" className="text-gray-400 hover:text-white">
+                <Link to="/events?category_id=ai-ml" className="text-gray-400 hover:text-white">
                   AI & Machine Learning
                 </Link>
               </li>
               <li>
-                <Link to="/events?category=web" className="text-gray-400 hover:text-white">
+                <Link to="/events?category_id=web" className="text-gray-400 hover:text-white">
                   Web Development
                 </Link>
               </li>
               <li>
-                <Link to="/events?category=mobile" className="text-gray-400 hover:text-white">
+                <Link to="/events?category_id=mobile" className="text-gray-400 hover:text-white">
                   Mobile Development
                 </Link>
               </li>
               <li>
-                <Link to="/events?category=data" className="text-gray-400 hover:text-white">
+                <Link to="/events?category_id=data" className="text-gray-400 hover:text-white">
                   Data Science
                 </Link>
               </li>
@@ -108,11 +108,11 @@ const Footer = () => {
               </li>
               <li className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-400">+1 (555) 123-4567</span>
+                <span className="text-gray-400">+977 19283848</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-400">info@techevents.com</span>
+                <span className="text-gray-400">info@techtrek.com</span>
               </li>
             </ul>
           </div>

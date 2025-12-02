@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Models\UserPreference;
- use MongoDB\BSON\Regex;
+use App\Models\User;
 
 class EventController extends Controller
 {
@@ -322,7 +322,6 @@ public function store(Request $request)
                 'is_free'         => $ticket['price'] == 0 || ($ticket['is_free'] ?? false),
                 'sold'            => 0,
             ]);
-
             if ($ticketData->is_free) {
                 $isFree = true;
             }
@@ -567,7 +566,7 @@ public function showEvent($id)
             'message' => 'Event not found',
         ], 404);
     }
-
+    
     // Increment user tag scores for 'view'
     if (auth()->check() && !empty($event->tags)) {
         $userId = auth()->id();
@@ -577,6 +576,10 @@ public function showEvent($id)
     }
 
     $bookedCount = $event->tickets ? $event->tickets->sum('sold') : 0;
+    // $organizer = User::where('_id', $event->organizer_id)->first();
+    $organizer = User::find($event->organizer_id);
+
+
 
     $responseData = [
         'id'             => $event->_id,
@@ -601,8 +604,15 @@ public function showEvent($id)
         'tickets'        => $event->tickets ?? [],
         'booked_count'   => $bookedCount,
         'organizer_id'   => $event->organizer_id,
+        'organizer_name' => $organizer->organization_name,
+        'organizer_city' => $organizer->city,
+        'organizer_status'=> $organizer->status,
+        'organizier_phone'=> $organizer->phone,
+        'organizer_email'=> $organizer->email,
         'created_at'     => $event->created_at,
         'updated_at'     => $event->updated_at,
+        'longitude'      => $event->longitude,
+        'latitude'       => $event->latitude,
     ];
 
     return response()->json([
@@ -610,6 +620,87 @@ public function showEvent($id)
         'data'    => $responseData,
     ]);
 }
+// public function showEvent($id)
+//     {
+//     $event = Event::with(['category', 'tickets'])->where('_id', $id)->first();
+
+//     if (!$event) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Event not found',
+//         ], 404);
+//     }
+
+//     // Increment user tag scores for 'view'
+//     if (auth()->check() && !empty($event->tags)) {
+//         $userId = auth()->id();
+//         UserPreference::incrementTags($userId, $event->tags, 'view', 1);
+//     }
+
+//     // Get booked tickets count
+//     $bookedCount = $event->tickets ? $event->tickets->sum('sold') : 0;
+
+//     // Load organizer
+//     $organizer = User::find($event->organizer_id);
+
+//     // ---------------------------
+//     // 🍀 TICKET VISIBILITY LOGIC
+//     // ---------------------------
+//     $now = now();
+
+//     $availableTickets = $event->tickets->filter(function ($ticket) use ($now, $event) {
+//         $start = $ticket->sale_start_date ? \Carbon\Carbon::parse($ticket->sale_start_date) : null;
+//         $end   = $ticket->sale_end_date ? \Carbon\Carbon::parse($ticket->sale_end_date) : null;
+
+//         // Case 1: Both sale_start_date AND sale_end_date exist
+//         if ($start && $end) {
+//             return $now->between($start, $end);
+//         }
+
+//         // Case 2: One or both dates missing → Allow only before event start date
+//         return $now->lte(\Carbon\Carbon::parse($event->start_date));
+//     });
+
+//     // ---------------------------
+//     // Response Formatting
+//     // ---------------------------
+
+//     $responseData = [
+//         'id'             => $event->_id,
+//         'title'          => $event->title,
+//         'description'    => $event->description,
+//         'category'       => $event->category ? [
+//             'id'   => $event->category->_id ?? $event->category->id,
+//             'name' => $event->category->name,
+//         ] : null,
+//         'start_date'     => $event->start_date,
+//         'end_date'       => $event->end_date,
+//         'start_time'     => $event->start_time,
+//         'end_time'       => $event->end_time,
+//         'venue_name'     => $event->venue_name,
+//         'location'       => $event->location,
+//         'address'        => $event->address,
+//         'capacity'       => $event->capacity,
+//         'featured_image' => $event->featured_image,
+//         'agenda'         => $event->agenda ?? [],
+//         'speakers'       => $event->speakers ?? [],
+//         'tags'           => $event->tags ?? [],
+        
+//         // ⬇️ ONLY AVAILABLE TICKETS ARE RETURNED
+//         'tickets'        => $availableTickets->values(),
+
+//         'booked_count'   => $bookedCount,
+//         'organizer_id'   => $event->organizer_id,
+//         'organizer_name' => $organizer->organization_name ?? null,
+//         'created_at'     => $event->created_at,
+//         'updated_at'     => $event->updated_at,
+//     ];
+
+//     return response()->json([
+//         'success' => true,
+//         'data'    => $responseData,
+//     ]);
+// }
 
 public function nearestEvents(Request $request)
 {
