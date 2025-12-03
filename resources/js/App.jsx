@@ -35,17 +35,17 @@ import EventManagement from "./pages/Admin/EventManagement"
 import OrganizerManagement from "./pages/Admin/OrganizerManagement"
 import OrganizerVerification from "./pages/Admin/OrganizerVerification"
 import UserManagement from "./pages/Admin/UserManagement"
+import Profile from "./pages/Profile"
 // User Dashboard
+import "../css/app.css"
 import ProtectedRoute from "./components/Auth/ProtectedRoute"
 import UserLayout from "./components/Layout/UserLayout"
-import UserProfile from "./pages/Profile"
-import UserDashboard from "./pages/User/Dashboard"
-import UserFavorites from "./pages/User/Favorites"
-
-import "../css/app.css"
 import Home from "./pages/Home"
 import HomeRedirect from "./pages/HomeRedirect"
 import UpcomingEvents from "./pages/UpcomingEvents"
+import UserDashboard from "./pages/User/Dashboard"
+import UserFavorites from "./pages/User/Favorites"
+import { default as UserProfile } from "./pages/User/Profile"
 
 const queryClient = new QueryClient()
 
@@ -69,10 +69,11 @@ function App() {
                  <Route  path ="home" element={<Home />} />
                 <Route path="events" element={<Events />} />
                 <Route path="events-near-you" element={<EventsNearYou />} />
-                    <Route path="upcoming-events" element={<UpcomingEvents />} />
+                <Route path="upcoming-events" element={<UpcomingEvents />} />
                 <Route path="recommended-events" element={<RecommendedEvents />} />
                 <Route path="events/:id" element={<EventDetails />} />
                 <Route path="categories" element={<Categories />} />
+                <Route path="profile/:id" element={<Profile />}/>
               </Route>
 
               {/* User Routes - Protected */}

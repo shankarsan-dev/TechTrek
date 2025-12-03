@@ -44,6 +44,7 @@ class AttendeesController extends Controller
 
         return [
             'id'          => (string) $booking->_id,
+            'booking_status'      => $booking->status,
             'eventName'   => $booking->event->title ?? 'Unknown Event',
             'date'        => $booking->event->start_date ?? null,
             'time'        => $booking->event->start_time ?? null,
@@ -73,5 +74,22 @@ class AttendeesController extends Controller
         'total'      => $bookings->total(),
     ]);
 }
+public function checkIn($bookingId)
+    {
+        $booking = Booking::findOrFail($bookingId);
 
+        if ($booking->status === 'checked_in') {
+            return response()->json([
+                'message' => 'Attendee is already checked in.'
+            ], 400);
+        }
+
+        $booking->status = 'checked_in';
+        $booking->save();
+
+        return response()->json([
+            'message' => 'Attendee successfully checked in.',
+            'data' => $booking
+        ]);
+    }
 }

@@ -181,7 +181,7 @@ public function index(Request $request)
     // Search filter
     if ($search && !empty($search)) {
         $query->where(function ($q) use ($search) {
-            $regex = Regex($search, 'i'); // case-insensitive
+            $regex = new \MongoDB\BSON\Regex($search, 'i'); // case-insensitive
 
             $q->where('title', 'like', "%{$search}%")
               ->orWhere('description', 'like', "%{$search}%")

@@ -10,6 +10,9 @@ use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\AttendeesController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\UserController;
+
+
 use App\Http\Controllers\NotificationController;    
 
 /*
@@ -29,12 +32,22 @@ Route::get('/events/{id}', [EventController::class, 'showEvent']);
 
 
  Route::get('/events', [EventController::class, 'index']);
+ Route::get('profile/{id}/', [UserController::class, 'getPublicProfile']);
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (JWT Auth)
 |--------------------------------------------------------------------------
 */
-
+Route::middleware('auth:api')->group(function () {
+    // Get authenticated user's own profile
+    Route::get('/user/profile', [UserController::class, 'getMyProfile']);
+    
+    // Update profile
+    Route::put('/profile', [UserController::class, 'updateProfile']);
+    
+    // Change password
+    Route::put('/profile/password', [UserController::class, 'changePassword']);
+});
 
 
 Route::middleware('auth:api')->group(function () {
@@ -44,6 +57,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/user-bookings', [BookingController::class, 'getUserBookings']);
    
     Route::get('/attendees', [AttendeesController::class, 'getOrganizerBookings']);
+      Route::put('/attendees/{bookingId}/check-in', [AttendeesController::class, 'checkIn']);
     Route::post('/user/preferences', [UserPreferenceController::class, 'updatePreferences']);
     Route::get('/user/preferences', [UserPreferenceController::class, 'getUserPreferences']);
     Route::get('/recommended-events', [EventController::class, 'recommendedEvents']);
@@ -54,10 +68,9 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/events', [EventController::class, 'store']);
         Route::get('/organizer/events', [EventController::class, 'organizerEvents']);
          Route::get('/organizer/events/{id}', [EventController::class, 'showOrganizerEvent']);
-    
-      
+   
 
-
+        
 //Admin-specific routes
         Route::get("/admin-test", function() {
             return response()->json(["message" => "Admin access granted"]);

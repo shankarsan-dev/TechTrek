@@ -1523,13 +1523,29 @@ export default function EventDetails() {
                   <div className="text-sm">{eventData?.venue_name}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <Users size={20} />
                 <div>
                   <div className="font-medium">{totalBooked} registered</div>
                   <div className="text-sm">of {totalCapacity} spots</div>
                 </div>
-              </div>
+              </div> */}
+
+             
+  <div className="flex items-center gap-2">
+    <Users size={20} />
+    <div>
+      <div className="font-medium">{totalBooked} registered</div>
+      {(totalCapacity > 0) ? (
+        <div className="text-sm">of {totalCapacity} spots</div>
+      ) : (
+        <div className="text-sm">Unlimited spots</div>
+      )}
+    </div>
+    
+  </div>
+
+
             </div>
 
             {/* Booking Actions */}
@@ -1707,6 +1723,18 @@ export default function EventDetails() {
                   <span className="text-gray-600">Event Type:</span>
                   <span className="font-medium">{eventData?.event_type || "Public"}</span>
                 </div>
+                 <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Event Location: </span>
+                  <span className="font-medium">{eventData?.location || "Public"}</span>
+                  
+                </div>
+                   
+                   <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Event Venue: </span>
+                  <span className="font-medium">{eventData?.venue_name || "on"}</span>
+                  
+                </div>
+                
                 
                 <div className="flex justify-between py-2">
                   <span className="text-gray-600">Created:</span>
@@ -1738,7 +1766,7 @@ export default function EventDetails() {
           </div>
         </div>
         {/* Event Location Map */}
-{/* Event Location Map */}
+
 {eventData?.location?.toLowerCase() !== "online" &&
  eventData?.latitude &&
  eventData?.longitude && (
