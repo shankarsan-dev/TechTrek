@@ -545,7 +545,6 @@ import {
   Clock,
   Download,
   Mail,
-  MoreVertical,
   XCircle
 } from "lucide-react"
 import { QRCodeCanvas } from "qrcode.react"
@@ -634,7 +633,6 @@ const Bookings = () => {
 
   // Actions menu per row
   const BookingRow = ({ booking }) => {
-    const [showMenu, setShowMenu] = useState(false)
     return (
       <tr className="hover:bg-gray-50">
         <td className="px-6 py-4">
@@ -654,37 +652,29 @@ const Bookings = () => {
         <td className="px-6 py-4">{booking.location}</td>
         <td className="px-6 py-4">${booking.totalPrice}</td>
         <td className="px-6 py-4">{getStatusBadge(booking.status)}</td>
-        <td className="px-6 py-4 text-right relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-          {showMenu && (
-            <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg py-1 z-10">
-              <button
-                onClick={() => navigate(`/events/${booking.event_id}`)}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        <td className="px-6 py-4">
+          <div className="flex flex-col gap-1">
+            <span
+              className="text-blue-600 cursor-pointer hover:underline"
+              onClick={() => navigate(`/events/${booking.event_id}`)}
+            >
+              View Event
+            </span>
+            <span
+              className="text-blue-600 cursor-pointer hover:underline"
+              onClick={() => setSelectedQR(booking)}
+            >
+              Show QR
+            </span>
+            {booking.status === "Active" && (
+              <span
+                className="text-red-600 cursor-pointer hover:underline"
+                onClick={() => cancelMutation.mutate(booking.id)}
               >
-                View Event
-              </button>
-              <button
-                onClick={() => setSelectedQR(booking)}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Show QR
-              </button>
-              {booking.status === "Active" && (
-                <button
-                  onClick={() => cancelMutation.mutate(booking.id)}
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  Cancel Booking
-                </button>
-              )}
-            </div>
-          )}
+                {cancelMutation.isLoading ? "Cancelling..." : "Cancel"}
+              </span>
+            )}
+          </div>
         </td>
       </tr>
     )

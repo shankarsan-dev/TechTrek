@@ -214,6 +214,7 @@ public function index(Request $request)
         ->get([
             '_id',
             'title',
+            'description',
             'featured_image',
             'location',
             'venue_name',
@@ -942,6 +943,7 @@ public function upcomingEvents(Request $request)
             '_id',
             'title',
             'featured_image',
+            'description',
             'location',
             'venue_name',
             'start_date',

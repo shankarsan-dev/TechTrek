@@ -1,7 +1,18 @@
-import { Link } from "react-router-dom"
-import { Calendar, MapPin, Users, Clock } from "lucide-react"
+import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const EventCard = ({ event }) => {
+const gradients = [
+  "from-blue-600 to-purple-600",
+  "from-green-600 to-blue-600",
+  "from-red-600 to-orange-600",
+  "from-purple-600 to-pink-600",
+  "from-indigo-600 to-blue-600",
+  "from-yellow-600 to-red-600",
+  "from-cyan-600 to-blue-600",
+  "from-pink-600 to-red-600",
+];
+
+const EventCard = ({ event, index = 0 }) => {
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
@@ -26,11 +37,17 @@ const EventCard = ({ event }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
       <div className="relative">
-        <img
-          src={event.featured_image || "/placeholder.svg?height=200&width=400"}
-          alt={event.title}
-          className="w-full h-48 object-cover"
-        />
+        {event.featured_image ? (
+          <img
+            src={event.featured_image}
+            alt={event.title}
+            className="w-full h-48 object-cover"
+          />
+        ) : (
+          <div className={`w-full h-48 bg-gradient-to-r ${gradients[index % gradients.length]} flex items-center justify-center`}>
+            <span className="text-white text-lg font-semibold">Event Image</span>
+          </div>
+        )}
         <div className="absolute top-4 left-4">
           <span className="bg-primary-600 text-white px-2 py-1 rounded-full text-xs font-medium">
             {event.category.name}

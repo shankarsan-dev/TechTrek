@@ -1,11 +1,12 @@
 "use client"
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Blocks, ChevronLeft, ChevronRight, Cloud, Code, Cpu, Database, Settings, Shield, Smartphone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NearestEventsSection from "../components/Events/NearestEventsSection";
 import RecommendedEventsSection from "../components/Events/RecommendedEventsSection";
 import UpcomingEventsSection from "../components/Events/UpcomingEventsSection";
+import { eventService } from "../services/eventService";
 
 // Simple UI Components
 const Card = ({ className = "", children, ...props }) => (
@@ -75,65 +76,112 @@ const Badge = ({ className = "", variant = "default", children, ...props }) => {
   )
 }
 
-// Banner data
-const banners = [
-  {
-    id: 1,
-    title: "AI & Machine Learning Summit 2026",
-    subtitle: "Join 500+ developers and AI experts",
-    description: "Discover the latest in artificial intelligence, machine learning, and neural networks",
-    image: "/placeholder.svg?height=400&width=800",
-    cta: "Register Now",
-    link: "/events/1",
-    gradient: "from-blue-600 to-purple-600",
-  },
-  { 
-    id: 2,
-    title: "React & Next.js Conference",
-    subtitle: "Master modern web development",
-    description: "Deep dive into React 18, Next.js 14, and the future of web development",
-    image: "/placeholder.svg?height=400&width=800",
-    cta: "Learn More",
-    link: "/events/2",
-    gradient: "from-green-600 to-blue-600",
-  },
-  {
-    id: 3,
-    title: "Cybersecurity Workshop",
-    subtitle: "Protect the digital world",
-    description: "Hands-on ethical hacking and cybersecurity training with industry experts",
-    image: "/placeholder.svg?height=400&width=800",
-    cta: "Join Workshop",
-    link: "/events/3",
-    gradient: "from-red-600 to-orange-600",
-  },
-]
+// Banner data will be fetched from API
 
-
+const gradients = [
+  "from-blue-600 to-purple-600",
+  "from-green-600 to-blue-600",
+  "from-red-600 to-orange-600",
+  "from-purple-600 to-pink-600",
+  "from-indigo-600 to-blue-600",
+  "from-yellow-600 to-red-600",
+  "from-cyan-600 to-blue-600",
+  "from-pink-600 to-red-600",
+];
 
 const categories = [
-  { name: "Artificial Intelligence", count: 45, icon: "🤖", color: "bg-blue-100 text-blue-800", id:"ai-ml"},
-  { name: "Web Development", count: 67, icon: "💻", color: "bg-green-100 text-green-800", id:"web-dev" },
-  { name: "Mobile Development", count: 32, icon: "📱", color: "bg-purple-100 text-purple-800", id:"mobile-dev" },
-  { name: "Data Science", count: 28, icon: "📊", color: "bg-orange-100 text-orange-800", id:"data-science" },
-  { name: "Cybersecurity", count: 19, icon: "🔒", color: "bg-red-100 text-red-800", id:"cyber-security" },
-  { name: "Cloud Computing", count: 41, icon: "☁️", color: "bg-cyan-100 text-cyan-800", id:"cloud-computing" },
-  { name: "Blockchain", count: 23, icon: "⛓️", color: "bg-yellow-100 text-yellow-800", id:"blockchain-web3" },
-  { name: "Dev Ops", count: 15, icon: "🌐", color: "bg-indigo-100 text-indigo-800", id:"dev-ops" },
+  { name: "Artificial Intelligence", count: 45, icon: Cpu, color: "bg-blue-100 text-blue-800", id:"ai-ml"},
+  { name: "Web Development", count: 67, icon: Code, color: "bg-green-100 text-green-800", id:"web-dev" },
+  { name: "Mobile Development", count: 32, icon: Smartphone, color: "bg-purple-100 text-purple-800", id:"mobile-dev" },
+  { name: "Data Science", count: 28, icon: Database, color: "bg-orange-100 text-orange-800", id:"data-science" },
+  { name: "Cybersecurity", count: 19, icon: Shield, color: "bg-red-100 text-red-800", id:"cyber-security" },
+  { name: "Cloud Computing", count: 41, icon: Cloud, color: "bg-cyan-100 text-cyan-800", id:"cloud-computing" },
+  { name: "Blockchain", count: 23, icon: Blocks, color: "bg-yellow-100 text-yellow-800", id:"blockchain-web3" },
+  { name: "Dev Ops", count: 15, icon: Settings, color: "bg-indigo-100 text-indigo-800", id:"devops" },
 ]
 
 export default function Home() {
   const [currentBanner, setCurrentBanner] = useState(0)
- // const { location, loading, error } = useLocation();
+  const [banners, setBanners] = useState([])
+  const [loading, setLoading] = useState(true)
+  // const { location, loading, error } = useLocation();
    const [nearestEvents, setNearestEvents] = useState([]);
   console.log("User location:", location);
+
+  // Fetch banner events
+  useEffect(() => {
+    const fetchBannerEvents = async () => {
+      setLoading(true)
+      try {
+        const filters = {
+          category_id: "all",
+          search: "",
+          filter: "all",
+          limit: 5,
+        }
+        const data = await eventService.getEvents(filters)
+        const formattedBanners = data.map((event, index) => ({
+          id: event.id || event._id,
+          title: event.title,
+          description: event.description?.substring(0, 100) + "..." || "Discover this amazing tech event",
+          image: event.featured_image || "/placeholder.svg?height=400&width=800",
+          cta: "Register Now",
+          link: `/events/${event.id || event._id}`,
+          gradient: index === 0 ? "from-blue-600 to-purple-600" :
+                   index === 1 ? "from-green-600 to-blue-600" :
+                   index === 2 ? "from-red-600 to-orange-600" :
+                   index === 3 ? "from-purple-600 to-pink-600" :
+                   "from-indigo-600 to-blue-600",
+        }))
+        setBanners(formattedBanners)
+      } catch (err) {
+        console.error("Failed to fetch banner events:", err)
+        // Fallback to static banners if fetch fails
+        setBanners([
+          {
+            id: 1,
+            title: "AI & Machine Learning Summit 2026",
+            description: "Discover the latest in artificial intelligence, machine learning, and neural networks",
+            image: "/placeholder.svg?height=400&width=800",
+            cta: "Register Now",
+            link: "/events/1",
+            gradient: "from-blue-600 to-purple-600",
+          },
+          {
+            id: 2,
+            title: "React & Next.js Conference",
+            description: "Deep dive into React 18, Next.js 14, and the future of web development",
+            image: "/placeholder.svg?height=400&width=800",
+            cta: "Learn More",
+            link: "/events/2",
+            gradient: "from-green-600 to-blue-600",
+          },
+          {
+            id: 3,
+            title: "Cybersecurity Workshop",
+            description: "Hands-on ethical hacking and cybersecurity training with industry experts",
+            image: "/placeholder.svg?height=400&width=800",
+            cta: "Join Workshop",
+            link: "/events/3",
+            gradient: "from-red-600 to-orange-600",
+          },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBannerEvents()
+  }, [])
+
   // Auto-rotate banners
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % banners.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [])
+    if (banners.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentBanner((prev) => (prev + 1) % banners.length)
+      }, 5000)
+      return () => clearInterval(timer)
+    }
+  }, [banners])
 
   const nextBanner = () => {
     setCurrentBanner((prev) => (prev + 1) % banners.length)
@@ -147,29 +195,59 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Hero Banner Carousel */}
       <section className="relative h-96 md:h-[500px] overflow-hidden">
-        {banners.map((banner, index) => (
-          <div
-            key={banner.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentBanner ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient} opacity-90`} />
-            <img src={banner.image || "/placeholder.svg"} alt={banner.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white px-4 max-w-4xl">
-                <h1 className="text-4xl md:text-6xl font-bold mb-4">{banner.title}</h1>
-                <p className="text-xl md:text-2xl mb-2 opacity-90">{banner.subtitle}</p>
-                <p className="text-lg mb-8 opacity-80">{banner.description}</p>
-                <Link to={banner.link}>
-                  <Button size="lg" className="bg-blue-900 text-gray-900 hover:bg-blue-200">
-                    {banner.cta}
-                  </Button>
-                </Link>
+        {loading ? (
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+            <div className="text-center text-white px-4 max-w-4xl">
+              <div className="animate-pulse">
+                <div className="h-12 bg-white/20 rounded mb-4"></div>
+                <div className="h-8 bg-white/20 rounded mb-2"></div>
+                <div className="h-6 bg-white/20 rounded mb-8"></div>
+                <div className="h-12 bg-white/20 rounded w-48 mx-auto"></div>
               </div>
             </div>
           </div>
-        ))}
+        ) : banners.length === 0 ? (
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+            <div className="text-center text-white px-4 max-w-4xl">
+              <h1 className="text-4xl md:text-6xl font-bold mb-4">Welcome to TechTrek</h1>
+              <p className="text-lg mb-8 opacity-80">Join thousands of developers and tech enthusiasts</p>
+              <Link to="/events">
+                <Button size="lg" className="bg-blue-900 text-gray-900 hover:bg-blue-200">
+                  Browse Events
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          banners.map((banner, index) => (
+            <div
+              key={banner.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                index === currentBanner ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {banner.image ? (
+                <>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient} opacity-90`} />
+                  <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
+                </>
+              ) : (
+                <div className={`absolute inset-0 bg-gradient-to-r ${gradients[index % gradients.length]}`} />
+              )}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-white px-4 max-w-4xl">
+                  <h1 className="text-4xl md:text-6xl font-bold mb-4">{banner.title}</h1>
+                  <p className="text-lg mb-8 opacity-80">{banner.description}</p>
+                  <Link to={banner.link}>
+                    <Button size="lg" className="bg-blue-900 text-gray-900 hover:bg-blue-200">
+                      {banner.cta}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
 
         {/* Navigation Arrows */}
         <button
@@ -243,17 +321,19 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <Link key={category.id} to={`/events?category_id=${encodeURIComponent(category.id)}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-4xl mb-4">{category.icon}</div>
-                    <h3 className="font-semibold mb-2">{category.name}</h3>
-                    <Badge className={category.color}>{category.count} events</Badge>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            {categories.map((category) => {
+              const IconComponent = category.icon
+              return (
+                <Link key={category.id} to={`/events?category_id=${encodeURIComponent(category.id)}`}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                    <CardContent className="p-6 text-center">
+                      <IconComponent className="w-16 h-16 mb-4 mx-auto" />
+                      <h3 className="font-semibold mb-2">{category.name}</h3>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section> 

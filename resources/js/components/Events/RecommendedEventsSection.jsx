@@ -176,13 +176,24 @@
 //     </section>
 //   );
 // }
-import { ArrowRight, Calendar, MapPin, Users } from "lucide-react";
+import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { eventService } from "../../services/eventService";
 import { Badge } from "../UI/Badge";
 import { Button } from "../UI/Button";
 import { Card, CardContent } from "../UI/Card";
+
+const gradients = [
+  "from-blue-600 to-purple-600",
+  "from-green-600 to-blue-600",
+  "from-red-600 to-orange-600",
+  "from-purple-600 to-pink-600",
+  "from-indigo-600 to-blue-600",
+  "from-yellow-600 to-red-600",
+  "from-cyan-600 to-blue-600",
+  "from-pink-600 to-red-600",
+];
 
 export default function RecommendedEventsSection() {
   const [recommendedEvents, setRecommendedEvents] = useState([]);
@@ -311,16 +322,23 @@ export default function RecommendedEventsSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recommendedEvents.map((event) => {
+          {recommendedEvents.map((event, index) => {
             const { street, city } = parseAddress(event.location);
+            const gradient = gradients[index % gradients.length];
 
             return (
               <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                <img
-                  src={event.featured_image || "/placeholder.svg"}
-                  alt={event.title}
-                  className="w-full h-48 object-cover rounded-t-lg"
-                />
+                {event.featured_image ? (
+                  <img
+                    src={event.featured_image}
+                    alt={event.title}
+                    className="w-full h-48 object-cover rounded-t-lg"
+                  />
+                ) : (
+                  <div className={`w-full h-48 bg-gradient-to-r ${gradient} rounded-t-lg flex items-center justify-center`}>
+                    <span className="text-white text-lg font-semibold">Event Image</span>
+                  </div>
+                )}
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-3">
                     <Badge variant="secondary">{event.category?.name || "General"}</Badge>
@@ -343,10 +361,7 @@ export default function RecommendedEventsSection() {
                       <MapPin size={14} />
                       {street}, {city}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Users size={14} />
-                      {event.booked_count}/{event.capacity} attendees
-                    </div>
+
                   </div>
 
                   <Link to={`/events/${event.id}`}>

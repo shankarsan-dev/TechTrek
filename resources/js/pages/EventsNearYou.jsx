@@ -371,6 +371,33 @@ const Badge = ({ className = "", children, ...props }) => (
   </div>
 )
 
+const formatEventDate = (dateString) => {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    
+    // Format: "Dec 5, 2025"
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
+const formatLocation = (location) => {
+  if (!location) return "";
+  const parts = location.split(',');
+  return parts.slice(0, 3).join(',');
+};
+
 // -------------------- Distance Filters --------------------
 const distanceFilters = [
   { label: "Within 5 km", value: 5 },
@@ -390,7 +417,7 @@ export default function EventsNearYou() {
   const [selectedDistance, setSelectedDistance] = useState(25)
   const [userLocation, setUserLocation] = useState(null)
   const [isLocationDetected, setIsLocationDetected] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   // -------------------- Detect user location --------------------
   const detectLocation = () => {
@@ -560,7 +587,7 @@ export default function EventsNearYou() {
         </div>
 
         {/* Results */}
-        {loading ? (
+        {(!isLocationDetected || loading) ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <div
@@ -624,7 +651,12 @@ export default function EventsNearYou() {
                     <div className="space-y-1 text-sm text-gray-600 mb-3">
                       {event.start_date && (
                         <div className="flex items-center gap-2">
-                          <Calendar size={14} /> {event.start_date}
+                          <Calendar size={14} /> {formatEventDate(event.start_date)}
+                        </div>
+                      )}
+                      {event.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin size={14} /> {formatLocation(event.location)}
                         </div>
                       )}
                     </div>

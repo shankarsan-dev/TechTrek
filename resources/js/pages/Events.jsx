@@ -1,10 +1,24 @@
 
 "use client"
 
-import { CalendarDays, Search } from "lucide-react"
+import { CalendarDays, MapPin, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
+import { Badge } from "../components/Layout/ui/badge"
+import { Button } from "../components/Layout/ui/button"
+import { Card, CardContent } from "../components/Layout/ui/card"
 import { eventService } from "../services/eventService"
+
+const gradients = [
+  "from-blue-600 to-purple-600",
+  "from-green-600 to-blue-600",
+  "from-red-600 to-orange-600",
+  "from-purple-600 to-pink-600",
+  "from-indigo-600 to-blue-600",
+  "from-yellow-600 to-red-600",
+  "from-cyan-600 to-blue-600",
+  "from-pink-600 to-red-600",
+];
 
 const Events = () => {
   const [events, setEvents] = useState([])
@@ -66,6 +80,54 @@ const Events = () => {
     setSearchParams(searchParams)
   }
 
+const formatEventDate = (dateString) => {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    
+    // Format: "Dec 5, 2025"
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
+const formatEventDateWithDay = (dateString) => {
+  if (!dateString) return "";
+
+  try {
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+
+    // Format: "Fri, Dec 5, 2025"
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
+const formatLocation = (location) => {
+  if (!location) return "";
+  const parts = location.split(',');
+  return parts.slice(0, 3).join(',');
+};
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -134,45 +196,55 @@ const Events = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {events.map((event) => (
-              <div
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {events.map((event, index) => (
+              <Card
                 key={event.id || event._id}
-                className="flex flex-col hover:shadow-lg transition-shadow bg-white rounded-lg shadow"
+                className="hover:shadow-lg transition-shadow flex flex-col h-[400px]"
               >
-                <img
-                  src={event.featured_image || "/placeholder.svg"}
-                  alt={event.title}
-                  className="rounded-t-lg object-cover w-full h-48"
-                />
-                <div className="p-4 flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-                      {categories.find((c) => c.id === event.category_id)?.name || event.category_name}
-                    </span>
-                    <span className="text-lg font-bold text-green-600">
-                      {event.price ? `Rs. ${event.price}` : "Free"}
-                    </span>
+                <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
+                  {event.featured_image ? (
+                    <img
+                      src={event.featured_image}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-r ${gradients[index % gradients.length]} flex items-center justify-center`}>
+                      <span className="text-white text-lg font-semibold">Event Image</span>
+                    </div>
+                  )}
+                </div>
+                <CardContent className="flex flex-col justify-between flex-1 p-4">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge>{categories.find((c) => c.id === event.category_id)?.name || event.category_name}</Badge>
+                      <div className="text-right text-sm text-gray-500">
+                        {event.price ? `Rs. ${event.price}` : "Free"}
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg font-semibold mb-2 line-clamp-2">{event.title}</h3>
+
+                    <div className="space-y-1 text-sm text-gray-600 mb-3">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays size={14} /> {formatEventDate(event.start_date)}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin size={14} /> {formatLocation(event.location)}
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-700 mb-3 line-clamp-2">{event.description}</p>
                   </div>
 
-                  <h3 className="text-xl font-semibold line-clamp-2 mb-2">{event.title}</h3>
-
-                  <p className="text-sm text-gray-600 mb-2 flex items-center gap-1">
-                    <CalendarDays size={14} /> {event.start_date} | {event.location}
-                  </p>
-
-                  <p className="text-gray-700 text-sm line-clamp-3 mb-3">{event.description}</p>
-                  <p className="text-xs text-gray-500">{event.booked_count || 0} attendees registered</p>
-                </div>
-
-                <div className="p-4 pt-0 mt-auto">
-                  <Link to={`/events/${event.id || event._id}`}>
-                    <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                      View Details & Register
-                    </button>
-                  </Link>
-                </div>
-              </div>
+                  <div className="flex gap-2 mt-auto">
+                    <Link to={`/events/${event.id || event._id}`} className="flex-1">
+                      <Button className="w-full text-sm">View Details & Register</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
