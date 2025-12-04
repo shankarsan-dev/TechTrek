@@ -5433,7 +5433,6 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  DollarSign,
   Download,
   Filter,
   Loader2,
@@ -6028,8 +6027,8 @@ const OrganizerAttendees = () => {
                           <span className="font-medium">{attendee.ticketType}</span>
                         </div>
                         <div className="flex items-center text-gray-900 mt-2">
-                          <DollarSign className="h-4 w-4 mr-2 text-green-500" />
-                          <span className="font-semibold">${attendee.totalPrice}</span>
+    
+                          <span className="font-semibold">Rs.{attendee.totalPrice}</span>
                           {parseFloat(attendee.ticketPrice) > 0 && (
                             <span className="text-sm text-gray-500 ml-2">
                               (${attendee.ticketPrice} each)

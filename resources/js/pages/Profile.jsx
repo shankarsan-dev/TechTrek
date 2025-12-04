@@ -2,14 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query"
 import {
-    AlertCircle,
-    ArrowLeft,
-    Building2,
-    Calendar,
-    Home,
-    Loader2,
-    MapPin,
-    User
+  AlertCircle,
+  ArrowLeft,
+  Building2,
+  Calendar,
+  Home,
+  Loader2,
+  MapPin,
+  User
 } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { userService } from "../services/userService"
@@ -80,7 +80,7 @@ const Profile = () => {
             className="inline-flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back dfsfs
+            Back
           </button>
         </div>
 

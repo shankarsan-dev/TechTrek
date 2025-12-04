@@ -198,6 +198,7 @@ class RegisterController extends Controller
             'organization_name' => $request->role === 'organizer' ? trim($request->organizationName) : null,
             'kyc_document_path' => $kycPath,
             'status' => $request->role === 'organizer' ? 'pending' : 'verified',
+            'profile_picture' => null,
         ]);
 
         // Generate JWT token

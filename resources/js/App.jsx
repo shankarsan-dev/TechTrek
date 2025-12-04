@@ -24,7 +24,9 @@ import OrganizerDashboard from "./pages/Organizer/Dashboard"
 import OrganizerEventDetails from "./pages/Organizer/EventDetails"
 import EventEdit from "./pages/Organizer/EventEdit"
 import OrganizerEvents from "./pages/Organizer/Events"
+import OrganizerProfile from "./pages/Organizer/Profile"
 import OrganizerSettings from "./pages/Organizer/Settings"
+import ChangePassword from "./pages/User/Settings"
 
 
 // Admin Pages
@@ -34,7 +36,9 @@ import AdminDashboard from "./pages/Admin/Dashboard"
 import EventManagement from "./pages/Admin/EventManagement"
 import OrganizerManagement from "./pages/Admin/OrganizerManagement"
 import OrganizerVerification from "./pages/Admin/OrganizerVerification"
+import AdminSettings from "./pages/Admin/Settings"
 import UserManagement from "./pages/Admin/UserManagement"
+
 import Profile from "./pages/Profile"
 // User Dashboard
 import "../css/app.css"
@@ -89,7 +93,7 @@ function App() {
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="bookings" element={<Bookings />} />
                 <Route path="favorites" element={<UserFavorites />} />
-                <Route path="settings" element={<div>User Settings Page</div>} />
+                <Route path="settings" element={<ChangePassword />} />
               </Route>
 
               {/* Organizer Routes - Protected */}
@@ -110,6 +114,7 @@ function App() {
                 <Route path="analytics" element={<OrganizerAnalytics />} />
                 <Route path="attendees" element={<OrganizerAttendees />} />
                 <Route path="settings" element={<OrganizerSettings />} />
+                <Route path="profile" element={<OrganizerProfile />} />
                 
               </Route>
 
@@ -132,7 +137,7 @@ function App() {
                 <Route path="users" element={<div>User Management Page</div>} />
                 <Route path="events" element={<div>Event Monitoring Page</div>} />
                 <Route path="analytics" element={<div>Admin Analytics Page</div>} />
-                <Route path="settings" element={<div>Admin Settings Page</div>} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
             </Routes>
           </div>

@@ -146,7 +146,7 @@ const UserManagement = () => {
               <span className="bg-blue-100 px-2 py-1 rounded">Role: {role}</span>
             )}
             {status && (
-              <span className="bg-blue-100 px-2 py-1 rounded">Status: {status}</span>
+              <span className="bg-blue-100 px-2 py-1 rounded">Status: {status}:</span>
             )}
             <button 
               onClick={clearAllFilters}

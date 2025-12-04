@@ -125,7 +125,7 @@ const Categories = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="text-2xl font-bold text-blue-600">{totalEvents}</div>
             <div className="text-gray-600">Total Events</div>
@@ -138,7 +138,7 @@ const Categories = () => {
             <div className="text-2xl font-bold text-purple-600">25+</div>
             <div className="text-gray-600">Cities</div>
           </div>
-        </div>
+        </div> */}
 
         {/* Search */}
         <div className="relative mb-8">

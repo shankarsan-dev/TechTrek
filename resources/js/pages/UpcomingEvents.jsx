@@ -76,6 +76,26 @@ export default function UpcomingEvents() {
       (event.venue_name &&
         event.venue_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+  const formatEventDate = (dateString) => {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    
+    // Format: "Dec 25, 2023"
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+}
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -172,9 +192,12 @@ export default function UpcomingEvents() {
                       <Badge>
                         {event.category?.name || "Uncategorized"}
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      {/* <span className="text-xs text-gray-500">
                         {new Date(event.start_date).toLocaleDateString()}
-                      </span>
+                      </span> */}
+                      <span className="text-xs text-gray-500">
+  {formatEventDate(event.start_date)}
+</span>
                     </div>
 
                     <h3 className="text-lg font-semibold mb-2 line-clamp-2">

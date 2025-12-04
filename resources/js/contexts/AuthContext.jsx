@@ -147,6 +147,7 @@ const register = async (userData) => {
     isAdmin: user?.role === "admin",
     isOrganizer: user?.role === "organizer",
     isUser: user?.role === "user",
+    status: user?.status
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

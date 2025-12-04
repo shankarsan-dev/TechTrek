@@ -39,4 +39,43 @@ export const userService = {
     const response = await api.get("/recommendations");
     return response.data;
   },
+// changePassword: async (data) => {
+//     const response = await api.put("/change-password", data)
+//     return response.data
+//   },
+// In services/userService.js
+changePassword: async (data) => {
+  try {
+    const response = await api.post('/change-password', data)
+    // Return only the data property
+    return response.data
+  } catch (error) {
+    throw error
+  }
+},
+    // Update user profile - For Laravel backend
+  updateProfile: (data) => {
+    return api.put("/profile", data, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+  },
+
+  // Change password
+  changePassword: (data) => {
+    return api.post("/change-password", data)
+  },
+  
+  // Upload profile picture (if needed)
+  uploadProfilePicture: (formData) => {
+    return api.post("/upload-profile-picture", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    })
+  }, removeProfilePicture: () => {
+    return api.delete("/api/remove-profile-picture")
+  }
+  
 };

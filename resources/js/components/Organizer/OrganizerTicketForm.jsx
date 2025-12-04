@@ -78,7 +78,7 @@ const OrganizerTicketForm = ({ onChange }) => {
 
             {/* Price */}
             <div>
-              <label className="block text-sm font-medium mb-1">Price ($) *</label>
+              <label className="block text-sm font-medium mb-1">Price (Rs.) *</label>
               <input
                 type="number"
                 min="0"

@@ -591,20 +591,6 @@ const AdminLayout = () => {
 
       {/* Quick Stats */}
       <div className="p-4 border-t border-gray-200 flex-shrink-0">
-        <div className="bg-blue-50 rounded-lg p-3">
-          <p className="text-xs text-blue-800 font-medium">Quick Stats</p>
-          <div className="mt-1 text-xs text-blue-600">
-            <div className="flex justify-between">
-              <span>Online Users:</span>
-              <span className="font-semibold">1.2K</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Pending Actions:</span>
-              <span className="font-semibold">12</span>
-            </div>
-          </div>
-        </div>
-        
         <button
           onClick={logout}
           className="flex items-center w-full mt-3 px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"

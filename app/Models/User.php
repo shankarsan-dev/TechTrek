@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use MongoDB\Laravel\Eloquent\Model as Eloquent;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -38,7 +39,7 @@ class User extends Eloquent implements AuthenticatableContract, JWTSubject
         'organization_name',
         'kyc_document_path',
         'status',
-    
+        'profile_picture'
     ];
 
     // Hidden fields from JSON responses
@@ -86,4 +87,13 @@ class User extends Eloquent implements AuthenticatableContract, JWTSubject
         return $value ?: 'user';
     }
     
+     public function getProfilePictureUrlAttribute()
+    {
+        if ($this->profile_picture) {
+            // Return full URL
+            return Storage::url($this->profile_picture);
+        }
+        
+        return null;
+    }
 }

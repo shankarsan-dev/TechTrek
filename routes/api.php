@@ -46,7 +46,12 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/profile', [UserController::class, 'updateProfile']);
     
     // Change password
-    Route::put('/profile/password', [UserController::class, 'changePassword']);
+    Route::post('/change-password', [UserController::class, 'changePassword']);
+    // Change password
+
+     Route::post('/upload-profile-picture', [UserController::class, 'uploadProfilePicture']);
+    Route::delete('/remove-profile-picture', [UserController::class, 'removeProfilePicture']);
+
 });
 
 

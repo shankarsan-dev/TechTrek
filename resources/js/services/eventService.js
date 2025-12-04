@@ -142,6 +142,13 @@ getNearestEvents: async (latitude, longitude, maxDistance = 50, limit = 6, categ
 },getUpcomingEvents: async (filter="all",limit="10") => {
   const response = await api.get(`/events/upcoming?filter=${filter}&limit=${limit}`);
   return response.data.events; // adjust according to backend response
-}
+},
+verifyQRCode: async (qrCode) => {
+    return await api.post(`/verify-qr`, { qr_code: qrCode });
+  },
+
+  checkInAttendee: async (qrCode) => {
+    return await api.post(`/check-in`, { qr_code: qrCode });
+  }
 
 };

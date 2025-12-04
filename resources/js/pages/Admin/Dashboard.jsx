@@ -317,11 +317,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Calendar, CheckCircle, Clock, Shield, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminService } from "../../services/adminService";
 
 const AdminDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("30");
-
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats", selectedPeriod],
     queryFn: async () => {
@@ -335,7 +335,7 @@ const AdminDashboard = () => {
       return await AdminService.getAdminRecentActivity();
     },
   });
-
+const navigate = useNavigate();
   const StatCard = ({ title, value, change, changeType, icon: Icon, color = "primary" }) => (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between">
@@ -436,7 +436,7 @@ const AdminDashboard = () => {
 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
   {/* User Management */}
   <div
-    onClick={() => navigate("/admin/users")}
+    onClick={() => navigate("/admin/users/")}
     className="cursor-pointer bg-blue-50 hover:bg-blue-100 rounded-lg shadow-sm p-6 flex flex-col items-center justify-center transition-colors"
   >
     <Users className="h-10 w-10 text-blue-600 mb-3" />
@@ -446,7 +446,7 @@ const AdminDashboard = () => {
 
   {/* Event Management */}
   <div
-    onClick={() => navigate("/admin/events")}
+    onClick={() => navigate("/admin/event-management")}
     className="cursor-pointer bg-yellow-50 hover:bg-yellow-100 rounded-lg shadow-sm p-6 flex flex-col items-center justify-center transition-colors"
   >
     <Calendar className="h-10 w-10 text-yellow-600 mb-3" />
@@ -456,7 +456,7 @@ const AdminDashboard = () => {
 
   {/* Organizer Verification */}
   <div
-    onClick={() => navigate("/admin/organizers")}
+    onClick={() => navigate("/admin/organizer-management")}
     className="cursor-pointer bg-green-50 hover:bg-green-100 rounded-lg shadow-sm p-6 flex flex-col items-center justify-center transition-colors"
   >
     <CheckCircle className="h-10 w-10 text-green-600 mb-3" />
