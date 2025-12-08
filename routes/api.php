@@ -73,6 +73,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/events', [EventController::class, 'store']);
         Route::get('/organizer/events', [EventController::class, 'organizerEvents']);
          Route::get('/organizer/events/{id}', [EventController::class, 'showOrganizerEvent']);
+         
+         Route::put('organizer/events/{id}', [EventController::class, 'update']);
    
 
         
@@ -98,4 +100,5 @@ Route::post('/admin/approve', [AdminController::class, 'updateOrganizerStatus'])
 Route::middleware('auth:api')->group(function () {
     Route::get('/secure-documents/{userId}/{filename}', [DocumentController::class, 'viewDocument']);
     Route::get('/secure-documents/{userId}/{filename}/download', [DocumentController::class, 'downloadDocument']);
+     Route::delete('/events/{id}', [EventController::class, 'destroy']);
 });

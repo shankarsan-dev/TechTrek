@@ -75,7 +75,7 @@ getNearestEvents: async (latitude, longitude, maxDistance = 50, limit = 6, categ
     try {
       const response = await api.get(`/events/${id}`);
       console.log("Fetched event details:", response.data);
-      return response.data.data; // ✅ unwrap actual event object
+      return response.data.data;
     } catch (error) {
       throw new Error(
         error.response?.data?.message ||
@@ -150,5 +150,43 @@ verifyQRCode: async (qrCode) => {
   checkInAttendee: async (qrCode) => {
     return await api.post(`/check-in`, { qr_code: qrCode });
   }
+,
+  deleteEvent: async (eventId) => {
+    try {
+      const response = await api.delete(`/events/${eventId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
 
+  // Optional: Soft delete (cancel instead of delete)
+  cancelEvent: async (eventId, reason = '') => {
+    try {
+      const response = await api.put(`/events/${eventId}/cancel`, { reason });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+  // In your eventService.js file, add:
+
+updateEvent: async (id, data) => {
+  try {
+    const response = await api.put(`/organizer/events/${id}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log("Updated event:", response.data);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to update event"
+    );
+  }
+},
 };

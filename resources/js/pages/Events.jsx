@@ -220,7 +220,7 @@ const formatLocation = (location) => {
                     <div className="flex justify-between items-start mb-2">
                       <Badge>{categories.find((c) => c.id === event.category_id)?.name || event.category_name}</Badge>
                       <div className="text-right text-sm text-gray-500">
-                        {event.price ? `Rs. ${event.price}` : "Free"}
+                        {event.is_free ? `Free` : "Paid"}
                       </div>
                     </div>
 

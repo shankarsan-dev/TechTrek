@@ -650,7 +650,7 @@ const Bookings = () => {
         <td className="px-6 py-4">{new Date(booking.date).toLocaleDateString()}</td>
         <td className="px-6 py-4">{booking.time}</td>
         <td className="px-6 py-4">{booking.location}</td>
-        <td className="px-6 py-4">${booking.totalPrice}</td>
+        <td className="px-6 py-4">Rs.{booking.totalPrice}</td>
         <td className="px-6 py-4">{getStatusBadge(booking.status)}</td>
         <td className="px-6 py-4">
           <div className="flex flex-col gap-1">

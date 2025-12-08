@@ -54,7 +54,7 @@
 //     return response.data;
 //   },
 // };
-import axios from "axios";
+
 import api from "./api";
 
 export const authService = {
@@ -66,7 +66,7 @@ export const authService = {
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
       // Set default Authorization header for all future requests
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
     }
 
     return response.data;

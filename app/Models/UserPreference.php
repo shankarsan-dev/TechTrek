@@ -216,6 +216,129 @@
 //         ]);
 //     }
 // }
+// namespace App\Models;
+
+// use MongoDB\Laravel\Eloquent\Model;
+
+// class UserPreference extends Model
+// {
+//     protected $connection = 'mongodb';
+//     protected $collection = 'user_preferences';
+
+//     public $timestamps = true;
+
+//     protected $fillable = [
+//         'user_id',
+//         'interaction_type', // e.g., 'view', 'booking'
+//         'tag_scores',       // dynamic tag scores stored as key-value
+//     ];
+
+//     protected $casts = [
+//         'user_id' => 'string',
+//         'tag_scores' => 'array',
+//     ];
+
+//     protected static function booted()
+//     {
+//         static::creating(function ($model) {
+//             // Ensure tag_scores exists
+//             if (!isset($model->tag_scores) || !is_array($model->tag_scores)) {
+//                 $model->tag_scores = [];
+//             }
+
+//             // Force user_id to string
+//             if (is_object($model->user_id) && property_exists($model->user_id, '_id')) {
+//                 $model->user_id = (string) $model->user_id->_id;
+//             }
+//         });
+//     }
+
+//     /**
+//      * Increment scores for multiple tags in a single document
+//      *
+//      * @param string $userId
+//      * @param array $tags
+//      * @param string $interactionType
+//      * @param int|array $weights Optional weight per tag or single integer
+//      * @return UserPreference
+//      */
+//     // public static function incrementTags($userId, array $tags, $interactionType = 'view', $weights = 1)
+//     // {
+//     //     $userId = (string) $userId;
+
+//     //     // Find or create the single preference document for this user + interaction type
+//     //     $pref = self::firstOrCreate(
+//     //         ['user_id' => $userId, 'interaction_type' => $interactionType],
+//     //         ['tag_scores' => []]
+//     //     );
+
+//     //     $tagScores = $pref->tag_scores ?? [];
+
+//     //     foreach ($tags as $tag) {
+//     //         // Determine increment: allow single weight or array of weights
+//     //         $increment = is_array($weights) && isset($weights[$tag]) ? $weights[$tag] : (int)$weights;
+
+//     //         if (!isset($tagScores[$tag])) {
+//     //             $tagScores[$tag] = $increment; // first-time score
+//     //         } else {
+//     //             $tagScores[$tag] += $increment; // increment existing
+//     //         }
+//     //     }
+
+//     //     $pref->tag_scores = $tagScores;
+//     //     $pref->save();
+
+//     //     return $pref;
+//     // }
+// public static function incrementTags($userId, array $tags, $interactionType = 'view', $weights = 1, $decayRate = 0.98)
+// {
+//     $userId = (string) $userId;
+
+//     // Find or create the single preference document for this user + interaction type
+//     $pref = self::firstOrCreate(
+//         ['user_id' => $userId, 'interaction_type' => $interactionType],
+//         ['tag_scores' => []]
+//     );
+
+//     // ✅ ADDED: Apply decay to existing scores before adding new ones
+//     if ($decayRate < 1.0 && !empty($pref->tag_scores)) {
+//         foreach ($pref->tag_scores as $tag => $score) {
+//             $pref->tag_scores[$tag] = round($score * $decayRate, 2);
+//         }
+//     }
+
+//     $tagScores = $pref->tag_scores ?? [];
+
+//     foreach ($tags as $tag) {
+//         // Determine increment: allow single weight or array of weights
+//         $increment = is_array($weights) && isset($weights[$tag]) ? $weights[$tag] : (int)$weights;
+
+//         if (!isset($tagScores[$tag])) {
+//             $tagScores[$tag] = $increment; // first-time score
+//         } else {
+//             $tagScores[$tag] += $increment; // increment existing
+//         }
+//     }
+
+//     $pref->tag_scores = $tagScores;
+//     $pref->save();
+
+//     return $pref;
+// }
+//     /**
+//      * Optional: apply decay to all tag scores
+//      *
+//      * @param float $decayRate 0 < decayRate <= 1
+//      */
+//     public function applyDecay($decayRate = 0.95)
+//     {
+//         foreach ($this->tag_scores as $tag => $score) {
+//             $this->tag_scores[$tag] = round($score * $decayRate, 2);
+//         }
+
+//         $this->save();
+//     }
+// }
 namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
@@ -229,59 +352,86 @@ class UserPreference extends Model
 
     protected $fillable = [
         'user_id',
-        'interaction_type', // e.g., 'view', 'booking'
-        'tag_scores',       // dynamic tag scores stored as key-value
+        'interaction_type',
+        'tag_scores',
     ];
 
-    protected $casts = [
-        'user_id' => 'string',
-        'tag_scores' => 'array',
-    ];
+    // ❌ Remove the cast
+    // protected $casts = [
+    //     'user_id' => 'string',
+    //     'tag_scores' => 'array',
+    // ];
 
     protected static function booted()
     {
         static::creating(function ($model) {
-            // Ensure tag_scores exists
-            if (!isset($model->tag_scores) || !is_array($model->tag_scores)) {
+            if (!isset($model->tag_scores)) {
                 $model->tag_scores = [];
+            } elseif (is_string($model->tag_scores)) {
+                $model->tag_scores = json_decode($model->tag_scores, true) ?? [];
             }
 
-            // Force user_id to string
             if (is_object($model->user_id) && property_exists($model->user_id, '_id')) {
                 $model->user_id = (string) $model->user_id->_id;
             }
         });
     }
+    
+    /**
+     * Accessor for tag_scores
+     */
+    public function getTagScoresAttribute($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_string($value)) {
+            return json_decode($value, true) ?? [];
+        }
+        return [];
+    }
+    
+    /**
+     * Mutator for tag_scores
+     */
+    public function setTagScoresAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['tag_scores'] = $value;
+        } else {
+            $this->attributes['tag_scores'] = json_decode($value, true) ?? [];
+        }
+    }
 
     /**
-     * Increment scores for multiple tags in a single document
-     *
-     * @param string $userId
-     * @param array $tags
-     * @param string $interactionType
-     * @param int|array $weights Optional weight per tag or single integer
-     * @return UserPreference
+     * Increment scores for multiple tags with automatic decay
      */
-    public static function incrementTags($userId, array $tags, $interactionType = 'view', $weights = 1)
+    public static function incrementTags($userId, array $tags, $interactionType = 'view', $weights = 1, $decayRate = 0.98)
     {
         $userId = (string) $userId;
 
-        // Find or create the single preference document for this user + interaction type
         $pref = self::firstOrCreate(
             ['user_id' => $userId, 'interaction_type' => $interactionType],
             ['tag_scores' => []]
         );
 
-        $tagScores = $pref->tag_scores ?? [];
+        // Get array (no cast issues)
+        $tagScores = $pref->tag_scores;
+        
+        // Apply decay
+        if ($decayRate < 1.0 && !empty($tagScores)) {
+            foreach ($tagScores as $tag => $score) {
+                $tagScores[$tag] = round($score * $decayRate, 2);
+            }
+        }
 
         foreach ($tags as $tag) {
-            // Determine increment: allow single weight or array of weights
             $increment = is_array($weights) && isset($weights[$tag]) ? $weights[$tag] : (int)$weights;
 
             if (!isset($tagScores[$tag])) {
-                $tagScores[$tag] = $increment; // first-time score
+                $tagScores[$tag] = $increment;
             } else {
-                $tagScores[$tag] += $increment; // increment existing
+                $tagScores[$tag] += $increment;
             }
         }
 
@@ -289,19 +439,5 @@ class UserPreference extends Model
         $pref->save();
 
         return $pref;
-    }
-
-    /**
-     * Optional: apply decay to all tag scores
-     *
-     * @param float $decayRate 0 < decayRate <= 1
-     */
-    public function applyDecay($decayRate = 0.95)
-    {
-        foreach ($this->tag_scores as $tag => $score) {
-            $this->tag_scores[$tag] = round($score * $decayRate, 2);
-        }
-
-        $this->save();
     }
 }

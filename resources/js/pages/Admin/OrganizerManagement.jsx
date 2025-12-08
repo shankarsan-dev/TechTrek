@@ -3011,20 +3011,20 @@
 // export default OrganizerManagement
 import axios from "axios"
 import {
-    AlertCircle,
-    BadgeCheck,
-    Bell,
-    Building,
-    CheckCircle,
-    Clock,
-    Download,
-    Eye,
-    FileText,
-    Mail,
-    MoreVertical,
-    Search,
-    Shield,
-    XCircle
+  AlertCircle,
+  BadgeCheck,
+  Bell,
+  Building,
+  CheckCircle,
+  Clock,
+  Download,
+  Eye,
+  FileText,
+  Mail,
+  MoreVertical,
+  Search,
+  Shield,
+  XCircle
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -3869,8 +3869,7 @@ const OrganizerManagement = () => {
                     <div className="flex items-center justify-between text-xs">
                       <span className={`px-2 py-1 rounded-full ${getVerificationLevelColor(org.verification.level)}`}>
                         {org.verification.level}
-                      </span>
-                      <span className="text-gray-500">Score: {org.verification.score}%</span>
+                      </span> 
                     </div>
                     {org.verification.verifiedAt && (
                       <div className="text-xs text-gray-500 mt-1">

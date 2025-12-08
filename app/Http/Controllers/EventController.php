@@ -6,9 +6,11 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\UserPreference;
 use App\Models\User;
+use App\Models\Booking;
 
 class EventController extends Controller
 {
@@ -346,6 +348,288 @@ public function store(Request $request)
         ], 500);
     }
 }
+ public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'title'       => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|string',
+            'start_date'  => 'nullable|date',
+            'end_date'    => 'nullable|date',
+            'start_time'  => 'nullable',
+            'end_time'    => 'nullable',
+            'venue_name'  => 'nullable|string',
+            'location'    => 'nullable|string',
+            'capacity'    => 'nullable|integer',
+            'tags'        => 'nullable|string',
+            'agenda'      => 'nullable|string',
+            'speakers'    => 'nullable|string',
+            'tickets'     => 'nullable|string', // JSON
+            'status'      => 'nullable|string',
+            'featured_image' => 'nullable|image|max:2048',
+            'longitude'   => 'nullable|numeric',
+            'latitude'    => 'nullable|numeric',
+            'event_type'  => 'nullable|string',
+            'is_free'     => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $organizer = auth()->user();
+            if (!$organizer) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Find event and verify ownership
+            $event = Event::where('_id', $id)
+                        ->where('organizer_id', $organizer->_id)
+                        ->first();
+
+            if (!$event) {
+                return response()->json([
+                    'message' => 'Event not found or you are not authorized to update this event'
+                ], 404);
+            }
+
+            // Validate category exists if provided
+            if ($request->has('category_id')) {
+                $categoryExists = Category::where('_id', $request->category_id)->exists();
+                if (!$categoryExists) {
+                    return response()->json([
+                        'message' => 'Category does not exist'
+                    ], 400);
+                }
+            }
+
+            // Validate dates if provided
+            if ($request->has('start_date') && $request->has('start_time') && 
+                $request->has('end_date') && $request->has('end_time')) {
+                
+                $startDateTime = new \DateTime($request->start_date . ' ' . $request->start_time);
+                $endDateTime = new \DateTime($request->end_date . ' ' . $request->end_time);
+                
+                if ($endDateTime <= $startDateTime) {
+                    return response()->json([
+                        'message' => 'End date/time must be after start date/time'
+                    ], 400);
+                }
+            }
+
+            // Handle featured image
+            $imageUrl = $event->featured_image; // Keep existing image by default
+            
+            if ($request->hasFile('featured_image')) {
+                // Delete old image if exists
+                if ($event->featured_image) {
+                    $oldImagePath = str_replace(Storage::disk('public')->url(''), '', $event->featured_image);
+                    Storage::disk('public')->delete($oldImagePath);
+                }
+                
+                // Upload new image
+                $imagePath = $request->file('featured_image')->store('events', 'public');
+                $imageUrl = Storage::disk('public')->url($imagePath);
+            } elseif ($request->has('remove_image') && $request->remove_image) {
+                // Remove image if requested
+                if ($event->featured_image) {
+                    $oldImagePath = str_replace(Storage::disk('public')->url(''), '', $event->featured_image);
+                    Storage::disk('public')->delete($oldImagePath);
+                }
+                $imageUrl = null;
+            }
+
+            // Decode JSON arrays
+            $agenda = $request->has('agenda') ? json_decode($request->agenda, true) : $event->agenda;
+            $speakers = $request->has('speakers') ? json_decode($request->speakers, true) : $event->speakers;
+            $tags = $request->has('tags') ? json_decode($request->tags, true) : $event->tags;
+            $tickets = $request->has('tickets') ? json_decode($request->tickets, true) : [];
+
+            // Validate JSON data
+            if ($request->has('agenda') && !is_array($agenda)) {
+                return response()->json([
+                    'message' => 'Invalid agenda format'
+                ], 400);
+            }
+
+            if ($request->has('speakers') && !is_array($speakers)) {
+                return response()->json([
+                    'message' => 'Invalid speakers format'
+                ], 400);
+            }
+
+            if ($request->has('tags') && !is_array($tags)) {
+                return response()->json([
+                    'message' => 'Invalid tags format'
+                ], 400);
+            }
+
+            if ($request->has('tickets') && !is_array($tickets)) {
+                return response()->json([
+                    'message' => 'Invalid tickets format'
+                ], 400);
+            }
+
+            // Prepare update data
+            $updateData = [
+                'title'       => $request->get('title', $event->title),
+                'description' => $request->get('description', $event->description),
+                'category_id' => $request->get('category_id', $event->category_id),
+                'start_date'  => $request->get('start_date', $event->start_date),
+                'end_date'    => $request->get('end_date', $event->end_date),
+                'start_time'  => $request->get('start_time', $event->start_time),
+                'end_time'    => $request->get('end_time', $event->end_time),
+                'venue_name'  => $request->get('venue_name', $event->venue_name),
+                'location'    => $request->get('location', $event->location),
+                'address'     => $request->get('address', $event->address),
+                'capacity'    => $request->get('capacity', $event->capacity),
+                'status'      => $request->get('status', $event->status),
+                'featured_image' => $imageUrl,
+                'agenda'      => $agenda,
+                'speakers'    => $speakers,
+                'tags'        => $tags,
+                'longitude'   => $request->get('longitude', $event->longitude),
+                'latitude'    => $request->get('latitude', $event->latitude),
+                'event_type'  => $request->get('event_type', $event->event_type),
+                'is_free'     => $event->is_free, // Will update after ticket processing
+                'is_offline'  => $request->get('event_type') === 'offline' ? true : 
+                               ($request->get('is_offline', $event->is_offline)),
+                'updated_at'  => now(),
+            ];
+
+            // Validate tickets if provided and event is not free
+            if (!empty($tickets)) {
+                // Delete existing tickets
+                Ticket::where('event_id', $event->_id)->delete();
+                
+                $isFree = false;
+                
+                foreach ($tickets as $ticket) {
+                    // Validate required ticket fields
+                    if (empty($ticket['name'])) {
+                        return response()->json([
+                            'message' => 'Ticket name is required'
+                        ], 400);
+                    }
+                    
+                    $price = isset($ticket['price']) ? (float) $ticket['price'] : 0;
+                    if ($price < 0) {
+                        return response()->json([
+                            'message' => 'Ticket price must be 0 or greater'
+                        ], 400);
+                    }
+                    
+                    // Create new ticket
+                    Ticket::create([
+                        'event_id'        => $event->_id,
+                        'organizer_id'    => $organizer->_id,
+                        'type'            => $ticket['name'] ?? 'General',
+                        'price'           => $price,
+                        'quantity'        => $ticket['capacity'] ?? 0,
+                        'description'     => $ticket['description'] ?? '',
+                        'sale_start_date' => $ticket['sale_start_date'] ?? null,
+                        'sale_end_date'   => $ticket['sale_end_date'] ?? null,
+                        'is_free'         => $price == 0 || ($ticket['is_free'] ?? false),
+                        'sold'            => 0,
+                        'is_unlimited'    => $ticket['is_unlimited'] ?? false,
+                        'min_per_order'   => $ticket['min_per_order'] ?? null,
+                        'max_per_order'   => $ticket['max_per_order'] ?? null,
+                    ]);
+                    
+                    if ($price == 0) {
+                        $isFree = true;
+                    }
+                }
+                
+                // Update event's is_free based on tickets
+                $updateData['is_free'] = $isFree;
+                
+                // If no tickets provided but is_free flag is set in request
+            } elseif ($request->has('is_free')) {
+                $updateData['is_free'] = (bool) $request->is_free;
+            }
+
+            // Update the event
+            $event->update($updateData);
+
+            // Refresh event with relationships
+            $event->load('category');
+
+            return response()->json([
+                'message' => 'Event updated successfully',
+                'data'    => $event,
+                'id'      => (string) $event->_id,
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Update event error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request_data' => $request->all(),
+                'event_id' => $id
+            ]);
+            
+            return response()->json([
+                'message' => 'Error updating event',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+// public function organizerEvents(Request $request)
+// {
+//     $organizer = auth()->user(); // JWT-authenticated organizer
+//     $organizerId = $organizer->_id;
+
+//     $query = Event::where('organizer_id', $organizerId);
+
+//     // Search filter
+//     if ($request->filled('search')) {
+//         $query->where('title', 'like', $request->search);
+//     }
+
+//     // Sorting
+//     $sortBy = $request->get('sort_by', 'created_at');
+//     $sortOrder = $request->get('sort_order', 'desc');
+//     $query->orderBy($sortBy, $sortOrder);
+
+//     // Pagination
+//     $perPage = 10;
+//     $page = $request->get('page', 1);
+
+//     $events = $query->skip(($page - 1) * $perPage)
+//         ->take($perPage)
+//         ->get();
+
+//     // Add category and booked tickets count
+//     $events->transform(function ($event) {
+//         // If tickets are embedded in Event
+//         if (isset($event->tickets)) {
+//             $event->booked_count = collect($event->tickets)
+//                 ->where('sold', '>', 0)
+//                 ->count();
+//         } 
+//         // If tickets are in a separate collection
+//         else {
+//             $event->booked_count = Ticket::where('event_id', $event->_id)
+//                 ->where('sold', '>', 0)
+//                 ->count();
+//         }
+
+//         // Load category manually (MongoDB does not support Eloquent relations fully)
+//         if (isset($event->category_id)) {
+//             $event->category = Category::find($event->category_id);
+//         }
+
+//         return $event;
+//     });
+
+//     return response()->json([
+//         'current_page' => (int) $page,
+//         'per_page' => $perPage,
+//         'total' => $query->count(),
+//         'data' => $events,
+//     ]);
+// }
 public function organizerEvents(Request $request)
 {
     $organizer = auth()->user(); // JWT-authenticated organizer
@@ -353,9 +637,18 @@ public function organizerEvents(Request $request)
 
     $query = Event::where('organizer_id', $organizerId);
 
-    // Search filter
+    // Search filter - FIXED for MongoDB
     if ($request->filled('search')) {
-        $query->where('title', 'like', $request->search);
+        $searchTerm = $request->search;
+        
+        // Use regex for case-insensitive search in MongoDB
+        $query->where('title', 'regex', '/' . preg_quote($searchTerm) . '/i');
+        
+        // OR if you want to search in multiple fields:
+        // $query->where(function($q) use ($searchTerm) {
+        //     $q->where('title', 'regex', '/' . preg_quote($searchTerm) . '/i')
+        //       ->orWhere('description', 'regex', '/' . preg_quote($searchTerm) . '/i');
+        // });
     }
 
     // Sorting
@@ -367,28 +660,31 @@ public function organizerEvents(Request $request)
     $perPage = 10;
     $page = $request->get('page', 1);
 
+    // Get total count BEFORE pagination
+    $total = $query->count();
+
     $events = $query->skip(($page - 1) * $perPage)
         ->take($perPage)
         ->get();
 
     // Add category and booked tickets count
     $events->transform(function ($event) {
-        // If tickets are embedded in Event
-        if (isset($event->tickets)) {
-            $event->booked_count = collect($event->tickets)
-                ->where('sold', '>', 0)
-                ->count();
-        } 
-        // If tickets are in a separate collection
-        else {
-            $event->booked_count = Ticket::where('event_id', $event->_id)
-                ->where('sold', '>', 0)
-                ->count();
+        // Calculate total sold tickets (not count of tickets with sold > 0)
+        $totalSold = 0;
+        
+        if (isset($event->tickets) && is_array($event->tickets)) {
+            foreach ($event->tickets as $ticket) {
+                $totalSold += (int)($ticket['sold'] ?? 0);
+            }
         }
+        
+        $event->booked_count = $totalSold;
 
-        // Load category manually (MongoDB does not support Eloquent relations fully)
+        // Load category
         if (isset($event->category_id)) {
             $event->category = Category::find($event->category_id);
+        } else {
+            $event->category = (object)['name' => 'Uncategorized'];
         }
 
         return $event;
@@ -397,7 +693,8 @@ public function organizerEvents(Request $request)
     return response()->json([
         'current_page' => (int) $page,
         'per_page' => $perPage,
-        'total' => $query->count(),
+        'total' => $total,
+        'last_page' => ceil($total / $perPage),
         'data' => $events,
     ]);
 }
@@ -1253,6 +1550,7 @@ public function upcomingEvents(Request $request)
 //         'data' => iterator_to_array($topTags),
 //     ]);
 // }
+
 public function recommendedEvents(Request $request)
 {
     $user = auth()->user();
@@ -1321,5 +1619,123 @@ public function recommendedEvents(Request $request)
         'data' => $recommendedEvents
     ]);
 }
-
+// public function destroy($id)
+// {
+//     try {
+//         $event = Event::find($id);
+        
+//         if (!$event) {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Event not found'
+//             ], 404);
+//         }
+        
+//         // Check authorization
+//         if ($event->organizer_id != Auth::id()||auth()->user()->role!=='admin') {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Unauthorized to delete this event'
+//             ], 403);
+//         }
+        
+//         // For MongoDB, remove transaction calls
+//         // Just delete directly
+        
+//         // Delete related tickets if they exist
+//         if (method_exists($event, 'tickets')) {
+//             $event->tickets()->delete();
+//         } else {
+//             // Manual delete for MongoDB
+//             Ticket::where('event_id', $id)->delete();
+//         }
+        
+//         // Delete the event
+//         $deleted = $event->delete();
+        
+//         if ($deleted) {
+//             return response()->json([
+//                 'success' => true,
+//                 'message' => 'Event deleted successfully'
+//             ]);
+//         }
+        
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Failed to delete event'
+//         ], 500);
+        
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'An error occurred while deleting the event',
+//             'error' => $e->getMessage()
+//         ], 500);
+//     }
+// }
+public function destroy($id)
+{
+    try {
+        $event = Event::find($id);
+        
+        if (!$event) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Event not found'
+            ], 404);
+        }
+        
+        // Check authorization - organizer OR admin can delete
+        $user = Auth::user();
+        $isOrganizer = $event->organizer_id == $user->id;
+        $isAdmin = $user->role === 'admin';
+        
+        if (!$isOrganizer && !$isAdmin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to delete this event'
+            ], 403);
+        }
+        
+        // Optional: Check if event has bookings (for organizer, admin can force delete)
+        if (!$isAdmin) { // Only check for non-admin users
+            if (Booking::where('event_id', $id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete event with existing bookings'
+                ], 400);
+            }
+        }
+        
+        // Delete related tickets if they exist
+        if (method_exists($event, 'tickets')) {
+            $event->tickets()->delete();
+        } else {
+            // Manual delete for MongoDB
+            Ticket::where('event_id', $id)->delete();
+        }
+        
+        // Delete the event
+        $deleted = $event->delete();
+        
+        if ($deleted) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Event deleted successfully'
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to delete event'
+        ], 500);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while deleting the event',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
 }

@@ -5433,7 +5433,6 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  Download,
   Filter,
   Loader2,
   Mail,
@@ -5891,14 +5890,14 @@ const OrganizerAttendees = () => {
               </select>
               
               {/* Export Button */}
-              <button
+              {/* <button
                 onClick={handleExport}
                 disabled={filteredAttendees.length === 0}
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 <Download className="h-5 w-5" />
                 <span className="hidden sm:inline">Export</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

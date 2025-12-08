@@ -670,9 +670,7 @@ export default function EventsNearYou() {
                     <Link to={`/events/${event.id}`} className="flex-1">
                       <Button className="w-full text-sm">View Details</Button>
                     </Link>
-                    <Button variant="outline" className="text-sm bg-transparent">
-                      Save
-                    </Button>
+                   
                   </div>
                 </CardContent>
               </Card>

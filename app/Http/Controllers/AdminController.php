@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Event;
+use App\Models\Ticket;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AdminController extends Controller
@@ -329,5 +330,59 @@ public function updateOrganizerStatus(Request $request)
         'message' => 'Organizer status updated successfully',
         'data' => $organizer,
     ]);
+}
+public function deleteEvent($id)
+{
+    try {
+        $event = Event::find($id);
+        
+        if (!$event) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Event not found'
+            ], 404);
+        }
+        
+        // Check authorization
+        if ($event->organizer_id != Auth::id() && Auth::user()->role!=='admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to delete this event'
+            ], 403);
+        }
+        
+        // For MongoDB, remove transaction calls
+        // Just delete directly
+        
+        // Delete related tickets if they exist
+        if (method_exists($event, 'tickets')) {
+            $event->tickets()->delete();
+        } else {
+            // Manual delete for MongoDB
+            Ticket::where('event_id', $id)->delete();
+        }
+        
+        // Delete the event
+        $deleted = $event->delete();
+        
+        if ($deleted) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Event deleted successfully'
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to delete event'
+        ], 500);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while deleting the event',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 }
