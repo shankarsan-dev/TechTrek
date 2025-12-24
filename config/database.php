@@ -112,20 +112,30 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        // 'mongodb' => [
+        //     'driver' => 'mongodb',
+        //     'dsn' => env('MONGODB_DSN'),
+        //     'host' => env('MONGODB_HOST', '127.0.0.1'),
+        //     'port' => env('MONGODB_PORT', 27017),
+        //     'database' => env('MONGODB_DATABASE', 'techtrek'),
+        //     'username' => env('MONGODB_USERNAME'),
+        //     'password' => env('MONGODB_PASSWORD'),
+        //     'options' => [
+        //         'appname' => env('APP_NAME', 'Laravel'),
+        //         'ssl' => env('MONGODB_SSL', false),
+        //         'database' => env('MONGODB_AUTH_SOURCE', 'admin'),
+        //     ],
+        // ],
         'mongodb' => [
-            'driver' => 'mongodb',
-            'dsn' => env('MONGODB_DSN'),
-            'host' => env('MONGODB_HOST', '127.0.0.1'),
-            'port' => env('MONGODB_PORT', 27017),
-            'database' => env('MONGODB_DATABASE', 'techtrek'),
-            'username' => env('MONGODB_USERNAME'),
-            'password' => env('MONGODB_PASSWORD'),
-            'options' => [
-                'appname' => env('APP_NAME', 'Laravel'),
-                'ssl' => env('MONGODB_SSL', false),
-                'database' => env('MONGODB_AUTH_SOURCE', 'admin'),
-            ],
-        ],
+    'driver' => 'mongodb',
+    'dsn' => env('MONGODB_DSN'),
+    'database' => env('MONGODB_DATABASE', 'techtrek'),
+    'options' => [
+        'appname' => env('APP_NAME', 'Laravel'),
+        'ssl' => env('MONGODB_SSL', true),
+    ],
+],
+
 
     ],
 
