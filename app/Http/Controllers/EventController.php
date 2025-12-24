@@ -1592,13 +1592,18 @@ public function recommendedEvents(Request $request)
 
     // Fetch all events
     $events = Event::all()->map(function ($event) use ($tagScores) {
-        $eventTags = is_string($event->tags) ? json_decode($event->tags, true) : $event->tags;
+        $eventTags = $event->tags;
+        
+        // Ensure $eventTags is always an array
+        if (is_string($eventTags)) {
+            $eventTags = json_decode($eventTags, true) ?? [];
+        } elseif (!is_array($eventTags)) {
+            $eventTags = [];
+        }
 
         $score = 0;
-        if (is_array($eventTags)) {
-            foreach ($eventTags as $tag) {
-                $score += $tagScores[$tag] ?? 0;
-            }
+        foreach ($eventTags as $tag) {
+            $score += $tagScores[$tag] ?? 0;
         }
 
         $event->recommendation_score = $score;

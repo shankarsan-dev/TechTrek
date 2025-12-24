@@ -41,19 +41,14 @@ Route::get('/events/{id}', [EventController::class, 'showEvent']);
 Route::middleware('auth:api')->group(function () {
     // Get authenticated user's own profile
     Route::get('/user/profile', [UserController::class, 'getMyProfile']);
-    
     // Update profile
     Route::put('/profile', [UserController::class, 'updateProfile']);
-    
     // Change password
     Route::post('/change-password', [UserController::class, 'changePassword']);
     // Change password
-
      Route::post('/upload-profile-picture', [UserController::class, 'uploadProfilePicture']);
     Route::delete('/remove-profile-picture', [UserController::class, 'removeProfilePicture']);
-
 });
-
 
 Route::middleware('auth:api')->group(function () {
 
@@ -73,7 +68,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/events', [EventController::class, 'store']);
         Route::get('/organizer/events', [EventController::class, 'organizerEvents']);
          Route::get('/organizer/events/{id}', [EventController::class, 'showOrganizerEvent']);
-         
+          Route::get('/admin/events', [EventController::class, 'organizerEvents']);
          Route::put('organizer/events/{id}', [EventController::class, 'update']);
    
 

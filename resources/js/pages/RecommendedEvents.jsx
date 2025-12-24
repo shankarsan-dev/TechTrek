@@ -1235,8 +1235,7 @@
 
 // export default Events
 "use client"
-
-import { CalendarDays, MapPin, Search, Tag } from "lucide-react";
+import { CalendarDays, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Badge } from "../components/Layout/ui/badge";
@@ -1388,7 +1387,7 @@ const Events = () => {
         </div>
 
         {/* User Interests */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        {/* <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
             <Tag size={18} /> Your Interests
           </h2>
@@ -1406,10 +1405,10 @@ const Events = () => {
               })}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
+        {/* <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <input
               type="text"
@@ -1443,7 +1442,7 @@ const Events = () => {
             <option value="month">This Month</option>
             <option value="year">This Year</option>
           </select>
-        </div>
+        </div> */}
 
         {/* Events Grid */}
         {loading ? (

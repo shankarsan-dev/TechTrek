@@ -71,6 +71,25 @@ getNearestEvents: async (latitude, longitude, maxDistance = 50, limit = 6, categ
     const res = await api.get(`/events`, { params })
     return res.data.events || res.data // adjust according to backend response
   },
+   getAllEvents: async (filters = {}) => {
+    const params = new URLSearchParams()
+
+    if (filters.category_id && filters.category_id !== "all") {
+      params.append("category", filters.category_id)
+    }
+    if (filters.search) {
+      params.append("search", filters.search)
+    }
+    if (filters.filter && filters.filter !== "all") {
+      params.append("filter", filters.filter)
+    }
+    if (filters.limit) {
+      params.append("limit", filters.limit)
+    }
+
+    const res = await api.get(`/all-events`, { params })
+    return res.data.events || res.data // adjust according to backend response
+  },
  getEvent: async (id) => {
     try {
       const response = await api.get(`/events/${id}`);

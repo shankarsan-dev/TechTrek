@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarDays, DollarSign, Edit, Eye, Search, Trash2, Users } from "lucide-react"
+import { CalendarDays, DollarSign, Eye, Search, Trash2, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { eventService } from "../../services/eventService"
@@ -234,9 +234,9 @@ const EventManagement = () => {
                         <Eye className="h-4 w-4" />
                       </button>
                     </Link>
-                    <button className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors">
+                    {/* <button className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors">
                       <Edit className="h-4 w-4" />
-                    </button>
+                    </button> */}
                     <button 
                       onClick={() => handleDeleteEvent(event.id || event._id)}
                       className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"

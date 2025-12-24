@@ -6030,7 +6030,7 @@ const OrganizerAttendees = () => {
                           <span className="font-semibold">Rs.{attendee.totalPrice}</span>
                           {parseFloat(attendee.ticketPrice) > 0 && (
                             <span className="text-sm text-gray-500 ml-2">
-                              (${attendee.ticketPrice} each)
+                              (Rs.{attendee.ticketPrice} each)
                             </span>
                           )}
                         </div>

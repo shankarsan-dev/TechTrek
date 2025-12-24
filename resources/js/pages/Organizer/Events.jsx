@@ -978,12 +978,12 @@ const OrganizerEvents = () => {
               View Details →
             </Link>
             <div className="flex gap-2">
-              <Link
-                to={`/organizer/events/${event.id}/edit`}
-                className="bg-primary-600 text-white px-3 py-1 rounded text-sm hover:bg-primary-700"
-              >
-                Edit
-              </Link>
+                <Link
+                  to={`/organizer/events/${event.id}/edit`}
+                  className="bg-primary-600 text-white px-3 py-1 rounded text-sm hover:bg-primary-700"
+                >
+                  Edit
+                </Link>
               <button
                 onClick={() => handleDeleteEvent(event.id, event.title, hasBookings)}
                 disabled={deletingEventId === event.id || hasBookings}

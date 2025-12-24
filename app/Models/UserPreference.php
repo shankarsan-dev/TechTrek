@@ -356,11 +356,7 @@ class UserPreference extends Model
         'tag_scores',
     ];
 
-    // ❌ Remove the cast
-    // protected $casts = [
-    //     'user_id' => 'string',
-    //     'tag_scores' => 'array',
-    // ];
+  
 
     protected static function booted()
     {
